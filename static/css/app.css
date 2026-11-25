@@ -200,8 +200,8 @@ h1, h2, h3, h4, h5, .h1, .h2, .h3, .h4, .h5 { color: var(--app-heading); letter-
 /* --------------------------------------------------------------- app shell --- */
 .app-shell { display: flex; min-height: 100vh; }
 .app-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
-.app-content { flex: 1 0 auto; width: 100%; max-width: 1440px; margin: 0 auto; padding: 1.5rem clamp(1rem, 2.5vw, 2rem) 2rem; }
-.app-footer { max-width: 1440px; width: 100%; margin: 0 auto; padding: 0 clamp(1rem, 2.5vw, 2rem) 1.5rem; font-size: .8rem; color: var(--app-muted); }
+.app-content { flex: 1 0 auto; width: 100%; max-width: 1920px; margin: 0 auto; padding: 1.5rem clamp(1rem, 2.5vw, 2rem) 2rem; }
+.app-footer { max-width: 1920px; width: 100%; margin: 0 auto; padding: 0 clamp(1rem, 2.5vw, 2rem) 1.5rem; font-size: .8rem; color: var(--app-muted); }
 
 /* sidebar: offcanvas below lg, fixed column from lg up */
 .app-sidebar .offcanvas-lg { --bs-offcanvas-width: 17rem; --bs-offcanvas-bg: var(--app-sidebar-bg); --bs-offcanvas-color: var(--app-sidebar-fg); }
@@ -332,9 +332,11 @@ h1, h2, h3, h4, h5, .h1, .h2, .h3, .h4, .h5 { color: var(--app-heading); letter-
 [data-bs-theme="light"] .chip-ok { color: #059669; }
 .hero-sub { color: var(--app-muted); margin: .4rem 0 0; }
 
-.quick-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .6rem; }
+/* Flex rows that stretch to fill the width, however many items a role can see. */
+.quick-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
 .quick-action {
-  display: flex; align-items: center; gap: .6rem; padding: .7rem .8rem; border-radius: .85rem;
+  flex: 1 1 10.5rem;
+  display: flex; align-items: center; gap: .6rem; padding: .8rem .9rem; border-radius: .85rem;
   text-decoration: none; color: var(--app-heading); font-weight: 600; font-size: .86rem;
   background: var(--app-surface-2); border: 1px solid var(--app-border);
   transition: transform .15s ease, border-color .15s ease, background .15s ease;
@@ -358,8 +360,9 @@ h1, h2, h3, h4, h5, .h1, .h2, .h3, .h4, .h5 { color: var(--app-heading); letter-
 .section-title h2 { font-size: 1rem; font-weight: 600; margin: 0; }
 .section-title a { font-size: .85rem; text-decoration: none; }
 
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
 .kpi {
+  flex: 1 1 14rem;
   position: relative; display: flex; flex-direction: column; gap: .2rem;
   padding: 1.1rem 1.15rem 1rem; border-radius: 1rem; text-decoration: none; color: inherit;
   background: var(--app-surface); border: 1px solid var(--app-border); box-shadow: var(--app-shadow);
