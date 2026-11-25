@@ -32,6 +32,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt ruff
 
+      # Settings refuse to load without an encryption key outside DEBUG, so give
+      # every step a throwaway one. It only ever encrypts CI's temporary data.
+      - name: Generate throwaway encryption key
+        run: |
+          key="$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')"
+          echo "::add-mask::$key"
+          echo "FIELD_ENCRYPTION_KEYS=$key" >> "$GITHUB_ENV"
+
       - name: Lint
         run: |
           ruff check .
@@ -50,6 +58,5 @@ jobs:
           VERCEL_URL: ci.example.vercel.app
           CRON_SECRET: ci
         run: |
-          export FIELD_ENCRYPTION_KEYS="$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')"
           python manage.py check --deploy --fail-level ERROR
           python manage.py collectstatic --noinput
