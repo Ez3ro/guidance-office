@@ -1,148 +1,273 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
-  <div>
-    <p class="text-body-secondary mb-1">{% now "l, F j, Y" %}</p>
-    <h1 class="h3 mb-0">Good day, {{ user.first_name|default:user.username }}</h1>
-  </div>
-  <div class="d-flex flex-wrap gap-2">
-    {% if caps.counseling %}<a class="btn btn-primary" href="{% url 'counseling:create' %}"><i class="bi bi-chat-heart"></i> Record session</a>{% endif %}
-    {% if caps.report_incident %}<a class="btn btn-outline-primary" href="{% url 'discipline:violation_create' %}"><i class="bi bi-exclamation-triangle"></i> Log violation</a>{% endif %}
-    <a class="btn btn-outline-danger" href="{% url 'protection:report' %}"><i class="bi bi-megaphone"></i> Report a concern</a>
-  </div>
-</div>
 
-<div class="row g-3 mb-4">
-  <div class="col-sm-6 col-lg-3">
-    <a class="stat-card card shadow-sm h-100" href="{% url 'scheduling:followups' %}">
-      <div class="card-body">
-        <div class="stat-label">My open follow-ups</div>
-        <div class="stat-value">{{ open_followup_count }}</div>
-        {% if overdue_count %}<div class="text-danger small fw-semibold"><i class="bi bi-alarm"></i> {{ overdue_count }} overdue</div>{% else %}<div class="text-body-secondary small">None overdue</div>{% endif %}
+{# ------------------------------------------------------------------ hero #}
+<section class="dash-hero">
+  <div class="row g-4 align-items-center">
+    <div class="col-xl-6">
+      <div class="hero-meta">
+        <span class="chip"><i class="bi bi-calendar-event"></i> {% now "l, j F Y" %}</span>
+        {% if school_year %}<span class="chip"><i class="bi bi-mortarboard"></i> S.Y. {{ school_year.name }}</span>{% endif %}
+        {% if attention_count %}
+        <span class="chip chip-attention"><i class="bi bi-exclamation-circle"></i> {{ attention_count }} item{{ attention_count|pluralize }} need{{ attention_count|pluralize:"s," }} attention</span>
+        {% else %}
+        <span class="chip chip-ok"><i class="bi bi-check2-circle"></i> All caught up</span>
+        {% endif %}
       </div>
-    </a>
+      <h1>{{ greeting }}, {{ user.first_name|default:user.username }}</h1>
+      <p class="hero-sub">Learner behaviour, interventions, counselling and child protection at a glance.</p>
+    </div>
+    <div class="col-xl-6">
+      <div class="quick-actions">
+        {% if caps.edit_students %}
+        <a class="quick-action tone-blue" href="{% url 'students:create' %}"><span class="qa-icon tone-icon"><i class="bi bi-person-plus"></i></span>Add learner</a>
+        {% endif %}
+        {% if caps.report_incident %}
+        <a class="quick-action tone-rose" href="{% url 'discipline:violation_create' %}"><span class="qa-icon tone-icon"><i class="bi bi-exclamation-octagon"></i></span>Record violation</a>
+        {% endif %}
+        {% if caps.manage_interventions %}
+        <a class="quick-action tone-amber" href="{% url 'interventions:create' %}"><span class="qa-icon tone-icon"><i class="bi bi-stars"></i></span>Add intervention</a>
+        {% endif %}
+        {% if caps.counseling %}
+        <a class="quick-action tone-violet" href="{% url 'counseling:create' %}"><span class="qa-icon tone-icon"><i class="bi bi-chat-heart"></i></span>New counseling</a>
+        {% endif %}
+        {% if caps.manage_lrp %}
+        <a class="quick-action tone-red" href="{% url 'protection:create' %}"><span class="qa-icon tone-icon"><i class="bi bi-shield-plus"></i></span>CPP intake</a>
+        {% else %}
+        <a class="quick-action tone-red" href="{% url 'protection:report' %}"><span class="qa-icon tone-icon"><i class="bi bi-megaphone"></i></span>Report a concern</a>
+        {% endif %}
+        <a class="quick-action tone-cyan" href="{% url 'scheduling:event_create' %}"><span class="qa-icon tone-icon"><i class="bi bi-calendar-plus"></i></span>Schedule event</a>
+      </div>
+    </div>
   </div>
+</section>
+
+{# ------------------------------------------------------------------ KPIs #}
+<div class="section-title"><h2>Overview</h2></div>
+<div class="kpi-grid">
+  <a class="kpi tone-blue" href="{% url 'students:list' %}?status=active">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-people"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Registered learners</div>
+    <div class="kpi-value">{{ students_active }}</div>
+    <div class="kpi-hint">{% if advisees_count is not None %}In your advisory class{% else %}Active learners{% endif %}</div>
+  </a>
+  {% if violations_total is not None %}
+  <a class="kpi tone-rose" href="{% url 'discipline:violations' %}">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-exclamation-octagon"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Total violations</div>
+    <div class="kpi-value">{{ violations_total }}</div>
+    <div class="kpi-hint">{{ violations_month }} this month</div>
+  </a>
+  {% endif %}
+  {% if cases %}
+  <a class="kpi tone-amber" href="{% url 'discipline:cases' %}?status=filed">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-hourglass-split"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Pending cases</div>
+    <div class="kpi-value">{{ cases.pending }}</div>
+    <div class="kpi-hint">Filed or awaiting answer</div>
+  </a>
+  <a class="kpi tone-cyan" href="{% url 'discipline:cases' %}?status=deliberation">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-activity"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Ongoing cases</div>
+    <div class="kpi-value">{{ cases.ongoing }}</div>
+    <div class="kpi-hint">Deliberation, decision or appeal</div>
+  </a>
+  {% endif %}
+  {% if awaiting_intervention is not None %}
+  <a class="kpi tone-orange" href="{% url 'interventions:list' %}?status=planned">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-stars"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Awaiting intervention</div>
+    <div class="kpi-value">{{ awaiting_intervention }}</div>
+    <div class="kpi-hint">Planned, not yet started</div>
+  </a>
+  {% endif %}
+  {% if awaiting_counseling is not None %}
+  <a class="kpi tone-violet" href="{% url 'counseling:list' %}?status=scheduled">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-chat-heart"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Awaiting counseling</div>
+    <div class="kpi-value">{{ awaiting_counseling }}</div>
+    <div class="kpi-hint">Scheduled sessions ahead</div>
+  </a>
+  {% endif %}
+  {% if under_monitoring is not None %}
+  <a class="kpi tone-blue" href="{% url 'interventions:list' %}?status=ongoing">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-eye"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Under monitoring</div>
+    <div class="kpi-value">{{ under_monitoring }}</div>
+    <div class="kpi-hint">Ongoing interventions</div>
+  </a>
+  {% endif %}
+  {% if cases %}
+  <a class="kpi tone-emerald" href="{% url 'discipline:cases' %}?status=closed">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-check2-circle"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Closed cases</div>
+    <div class="kpi-value">{{ cases.closed }}</div>
+    <div class="kpi-hint">Closed or dismissed</div>
+  </a>
+  {% endif %}
   {% if lrp_open is not None %}
-  <div class="col-sm-6 col-lg-3">
-    <a class="stat-card card shadow-sm h-100" href="{% url 'protection:list' %}?status=reported">
-      <div class="card-body">
-        <div class="stat-label">Open LRP cases</div>
-        <div class="stat-value">{{ lrp_open }}</div>
-        {% if lrp_new %}<div class="text-danger small fw-semibold">{{ lrp_new }} awaiting risk assessment</div>{% else %}<div class="text-body-secondary small">All assessed</div>{% endif %}
-      </div>
-    </a>
-  </div>
-  {% endif %}
-  {% if violations_month is not None %}
-  <div class="col-sm-6 col-lg-3">
-    <a class="stat-card card shadow-sm h-100" href="{% url 'discipline:violations' %}">
-      <div class="card-body">
-        <div class="stat-label">Violations this month</div>
-        <div class="stat-value">{{ violations_month }}</div>
-        <div class="text-body-secondary small">{{ discipline_open }} open disciplinary case{{ discipline_open|pluralize }}</div>
-      </div>
-    </a>
-  </div>
-  {% endif %}
-  {% if sessions_month is not None %}
-  <div class="col-sm-6 col-lg-3">
-    <a class="stat-card card shadow-sm h-100" href="{% url 'counseling:list' %}?mine=1">
-      <div class="card-body">
-        <div class="stat-label">My sessions this month</div>
-        <div class="stat-value">{{ sessions_month }}</div>
-        <div class="text-body-secondary small">{{ interventions_ongoing|default:0 }} ongoing intervention{{ interventions_ongoing|pluralize }}</div>
-      </div>
-    </a>
-  </div>
-  {% endif %}
-  {% if advisees_count is not None %}
-  <div class="col-sm-6 col-lg-3">
-    <a class="stat-card card shadow-sm h-100" href="{% url 'students:list' %}">
-      <div class="card-body">
-        <div class="stat-label">Learners in my advisory class</div>
-        <div class="stat-value">{{ advisees_count }}</div>
-      </div>
-    </a>
-  </div>
+  <a class="kpi tone-red" href="{% url 'protection:list' %}">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-shield-exclamation"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Open child protection cases</div>
+    <div class="kpi-value">{{ lrp_open }}</div>
+    {% if lrp_new %}<div class="kpi-hint is-alert">{{ lrp_new }} awaiting risk assessment</div>{% else %}<div class="kpi-hint">All risk-assessed</div>{% endif %}
+  </a>
   {% endif %}
   {% if recent_failed_logins is not None %}
-  <div class="col-sm-6 col-lg-3">
-    <a class="stat-card card shadow-sm h-100" href="{% url 'audit:list' %}?action=login_failed">
-      <div class="card-body">
-        <div class="stat-label">Failed sign-ins (24 h)</div>
-        <div class="stat-value">{{ recent_failed_logins }}</div>
-      </div>
-    </a>
-  </div>
+  <a class="kpi tone-slate" href="{% url 'audit:list' %}?action=login_failed">
+    <div class="kpi-top"><span class="kpi-icon tone-icon"><i class="bi bi-shield-lock"></i></span><i class="bi bi-arrow-right kpi-arrow"></i></div>
+    <div class="kpi-label">Failed sign-ins</div>
+    <div class="kpi-value">{{ recent_failed_logins }}</div>
+    <div class="kpi-hint">Last 24 hours</div>
+  </a>
   {% endif %}
 </div>
 
-<div class="row g-3">
-  <div class="col-lg-7">
-    {% if lrp_deadlines %}
-    <div class="card shadow-sm mb-3 border-danger-subtle">
-      <div class="card-header fw-semibold"><i class="bi bi-shield-exclamation text-danger"></i> DO 006 deadlines in the next 48 hours</div>
-      <ul class="list-group list-group-flush">
-        {% for f in lrp_deadlines %}
-        <li class="list-group-item d-flex justify-content-between gap-2">
-          <a href="{{ f.related_url|default:f.get_absolute_url }}">{{ f.title }}</a>
-          <span class="text-nowrap">{% badge f.state f.due_at|localdt|date:"M j, g:i A" %}</span>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-    <div class="card shadow-sm mb-3">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-semibold"><i class="bi bi-list-check"></i> My follow-ups</span>
-        <a class="small" href="{% url 'scheduling:followups' %}">All follow-ups</a>
+<div class="row g-4">
+  <div class="col-xl-8">
+
+    {# ------------------------------------------------------------ today #}
+    <section class="panel">
+      <div class="panel-head">
+        <h2><span class="panel-icon tone-icon tone-violet"><i class="bi bi-sun"></i></span> Today in the guidance office</h2>
+        <a href="{% url 'scheduling:calendar' %}">Open calendar <i class="bi bi-arrow-right"></i></a>
       </div>
-      <ul class="list-group list-group-flush">
-        {% for f in my_followups %}
-        <li class="list-group-item d-flex justify-content-between gap-2">
-          <a href="{{ f.related_url|default:f.get_absolute_url }}">{{ f.title }}</a>
-          <span class="text-nowrap">{% badge f.state f.due_at|localdt|date:"M j" %}</span>
-        </li>
-        {% empty %}
-        <li class="list-group-item text-body-secondary">Nothing assigned to you.</li>
-        {% endfor %}
-      </ul>
-    </div>
+      <div class="panel-split">
+        <div class="panel-body">
+          <div class="subhead"><span>Appointments &amp; sessions</span><span>{{ today_count }}</span></div>
+          {% if sessions_today or events_today %}
+          <ul class="feed">
+            {% for s in sessions_today %}
+            <li class="feed-item tone-violet">
+              <span class="feed-time">{% if s.start_time %}{{ s.start_time|time:"g:i A" }}{% else %}Any time{% endif %}</span>
+              <span class="feed-dot"></span>
+              <div class="feed-main"><a href="{{ s.get_absolute_url }}">{{ s.get_session_type_display }}</a><div class="feed-sub">Counseling session · {{ s.get_modality_display }}</div></div>
+            </li>
+            {% endfor %}
+            {% for e in events_today %}
+            <li class="feed-item tone-cyan">
+              <span class="feed-time">{{ e.start|localdt|date:"g:i A" }}</span>
+              <span class="feed-dot"></span>
+              <div class="feed-main"><a href="{{ e.get_absolute_url }}">{{ e.title }}</a><div class="feed-sub">{{ e.get_event_type_display }}{% if e.location %} · {{ e.location }}{% endif %}</div></div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="feed-empty"><i class="bi bi-calendar2-check"></i> Nothing scheduled for today.</div>
+          {% endif %}
+        </div>
+        <div class="panel-body">
+          <div class="subhead"><span>Needs attention</span><span>{{ attention_count }}</span></div>
+          {% if overdue_items or lrp_deadlines %}
+          <ul class="feed">
+            {% for f in overdue_items %}
+            <li class="feed-item tone-red">
+              <span class="feed-dot"></span>
+              <div class="feed-main"><a href="{{ f.related_url|default:f.get_absolute_url }}">{{ f.title }}</a><div class="feed-sub">Overdue since {{ f.due_at|localdt|date:"j M, g:i A" }} · {{ f.get_module_display }}</div></div>
+            </li>
+            {% endfor %}
+            {% for f in lrp_deadlines %}
+            <li class="feed-item tone-amber">
+              <span class="feed-dot"></span>
+              <div class="feed-main"><a href="{{ f.related_url|default:f.get_absolute_url }}">{{ f.title }}</a><div class="feed-sub">DO 006 deadline {{ f.due_at|localdt|date:"j M, g:i A" }}</div></div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% if overdue_total > overdue_items|length %}<a class="small d-inline-block mt-2" href="{% url 'scheduling:followups' %}">See all {{ overdue_total }} overdue</a>{% endif %}
+          {% else %}
+          <div class="feed-empty"><i class="bi bi-check2-circle"></i> No overdue follow-ups or lapsed deadlines.</div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    {# --------------------------------------------------------- pipeline #}
+    {% if cases %}
+    <section class="panel">
+      <div class="panel-head">
+        <h2><span class="panel-icon tone-icon tone-amber"><i class="bi bi-kanban"></i></span> Disciplinary case progress</h2>
+        <a href="{% url 'discipline:cases' %}">All cases <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="panel-body">
+        {% if cases.total %}
+        <div class="pipeline" role="img" aria-label="{{ cases.pending }} pending, {{ cases.ongoing }} ongoing, {{ cases.closed }} closed">
+          {% if cases.pending %}<span class="pipe-pending" data-width="{{ cases.pending_pct }}"></span>{% endif %}
+          {% if cases.ongoing %}<span class="pipe-ongoing" data-width="{{ cases.ongoing_pct }}"></span>{% endif %}
+          {% if cases.closed %}<span class="pipe-closed" data-width="{{ cases.closed_pct }}"></span>{% endif %}
+        </div>
+        {% else %}
+        <div class="pipeline" aria-hidden="true"></div>
+        {% endif %}
+        <div class="pipeline-legend">
+          <div class="legend-item sw-pending"><div class="lbl">Pending</div><div class="val">{{ cases.pending }}</div></div>
+          <div class="legend-item sw-ongoing"><div class="lbl">Ongoing</div><div class="val">{{ cases.ongoing }}</div></div>
+          <div class="legend-item sw-closed"><div class="lbl">Closed</div><div class="val">{{ cases.closed }}</div></div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
   </div>
-  <div class="col-lg-5">
-    {% if sessions_upcoming %}
-    <div class="card shadow-sm mb-3">
-      <div class="card-header fw-semibold"><i class="bi bi-chat-heart"></i> My scheduled sessions</div>
-      <ul class="list-group list-group-flush">
-        {% for s in sessions_upcoming %}
-        <li class="list-group-item"><a href="{{ s.get_absolute_url }}">{{ s.session_date|date:"D, M j" }}{% if s.start_time %} · {{ s.start_time|time:"g:i A" }}{% endif %}</a> <span class="text-body-secondary small">{{ s.get_session_type_display }}</span></li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-    <div class="card shadow-sm mb-3">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-semibold"><i class="bi bi-calendar-week"></i> Next 7 days</span>
-        <a class="small" href="{% url 'scheduling:calendar' %}">Calendar</a>
+
+  <div class="col-xl-4">
+    {# ------------------------------------------------------ follow-ups #}
+    <section class="panel">
+      <div class="panel-head">
+        <h2><span class="panel-icon tone-icon tone-blue"><i class="bi bi-list-check"></i></span> My follow-ups</h2>
+        <a href="{% url 'scheduling:followups' %}">All <i class="bi bi-arrow-right"></i></a>
       </div>
-      <ul class="list-group list-group-flush">
-        {% for e in upcoming_events %}
-        <li class="list-group-item"><a href="{{ e.get_absolute_url }}">{{ e.title }}</a><div class="small text-body-secondary">{{ e.start|localdt|date:"D, M j · g:i A" }}{% if e.location %} · {{ e.location }}{% endif %}</div></li>
-        {% empty %}
-        <li class="list-group-item text-body-secondary">No events.</li>
-        {% endfor %}
-      </ul>
-    </div>
+      <div class="panel-body">
+        {% if my_followups %}
+        <ul class="feed">
+          {% for f in my_followups %}
+          <li class="feed-item">
+            <div class="feed-main"><a href="{{ f.related_url|default:f.get_absolute_url }}">{{ f.title }}</a><div class="feed-sub">{{ f.get_module_display }}</div></div>
+            <span class="text-nowrap">{% badge f.state f.due_at|localdt|date:"j M" %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="feed-empty"><i class="bi bi-inbox"></i> Nothing assigned to you.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    {# ------------------------------------------------------ next 7 days #}
+    <section class="panel">
+      <div class="panel-head">
+        <h2><span class="panel-icon tone-icon tone-cyan"><i class="bi bi-calendar-week"></i></span> Next 7 days</h2>
+        <a href="{% url 'scheduling:calendar' %}">Calendar <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="panel-body">
+        {% if upcoming_events %}
+        <ul class="feed">
+          {% for e in upcoming_events %}
+          <li class="feed-item tone-cyan">
+            <span class="feed-time">{{ e.start|localdt|date:"D j" }}</span>
+            <div class="feed-main"><a href="{{ e.get_absolute_url }}">{{ e.title }}</a><div class="feed-sub">{{ e.start|localdt|date:"g:i A" }}{% if e.location %} · {{ e.location }}{% endif %}</div></div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="feed-empty"><i class="bi bi-calendar2"></i> No events in the next week.</div>
+        {% endif %}
+      </div>
+    </section>
+
     {% if my_reports %}
-    <div class="card shadow-sm mb-3">
-      <div class="card-header fw-semibold">Concerns I've reported</div>
-      <ul class="list-group list-group-flush">
-        {% for c in my_reports %}
-        <li class="list-group-item d-flex justify-content-between"><a href="{{ c.get_absolute_url }}">{{ c.case_number }}</a><span class="small text-body-secondary">{{ c.get_status_display }}</span></li>
-        {% endfor %}
-      </ul>
-    </div>
+    <section class="panel">
+      <div class="panel-head">
+        <h2><span class="panel-icon tone-icon tone-red"><i class="bi bi-inbox"></i></span> Concerns I've reported</h2>
+        <a href="{% url 'protection:my_reports' %}">All <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="panel-body">
+        <ul class="feed">
+          {% for c in my_reports %}
+          <li class="feed-item"><div class="feed-main"><a href="{{ c.get_absolute_url }}">{{ c.case_number }}</a><div class="feed-sub">{{ c.get_status_display }}</div></div></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
     {% endif %}
   </div>
 </div>

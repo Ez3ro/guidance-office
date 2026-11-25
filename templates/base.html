@@ -1,12 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark light">
   <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "allowScriptTags": false, "historyCacheSize": 0}'>
   <title>{% block title %}{% endblock %} · {{ SITE_NAME }}</title>
   <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  {# Applies the saved light/dark choice before first paint. External file: the CSP forbids inline scripts. #}
+  <script src="{% static 'js/theme.js' %}"></script>
   <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
@@ -16,13 +19,27 @@
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   <a class="visually-hidden-focusable skip-link" href="#main">Skip to content</a>
-  {% include "includes/nav.html" %}
-  <main id="main" class="container-xl py-4">
-    {% include "includes/messages.html" %}
-    {% block content %}{% endblock %}
-  </main>
-  <footer class="container-xl pb-4 small text-body-secondary d-print-none">
-    <i class="bi bi-lock"></i> Confidential learner records. Access is logged. Handle in line with RA 10173 (Data Privacy Act of 2012) and DepEd's child protection policies.
-  </footer>
+  {% if user.is_authenticated %}
+  <div class="app-shell">
+    {% include "includes/sidebar.html" %}
+    <div class="app-main">
+      {% include "includes/topbar.html" %}
+      <main id="main" class="app-content">
+  {% else %}
+  <div class="auth-shell">
+    <div class="auth-toolbar">{% include "includes/theme_toggle.html" %}</div>
+    <div>
+      <main id="main" class="container-xl py-4">
+  {% endif %}
+        {% include "includes/messages.html" %}
+        {% block content %}{% endblock %}
+      </main>
+      {% if user.is_authenticated %}
+      <footer class="app-footer d-print-none">
+        <i class="bi bi-lock"></i> Confidential learner records. Access is logged. Handle in line with RA 10173 (Data Privacy Act of 2012) and DepEd's child protection policies.
+      </footer>
+      {% endif %}
+    </div>
+  </div>
 </body>
 </html>

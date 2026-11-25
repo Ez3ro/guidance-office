@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-  <h1 class="h3 mb-0">{{ title }}</h1>
-  <div class="d-flex flex-wrap gap-2">
+<div class="page-head">
+  <div>
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<p class="page-sub">{{ subtitle }}</p>{% endif %}
+  </div>
+  <div class="page-actions">
     {% block header_actions %}
     {% for action in header_actions %}
     <a class="btn btn-{{ action.style }}" href="{{ action.url }}">{% if action.icon %}<i class="bi {{ action.icon }}"></i> {% endif %}{{ action.label }}</a>
@@ -13,52 +16,65 @@
   </div>
 </div>
 
+{% block before_filters %}{% endblock %}
+
 {% if search_enabled or filters %}
-<form class="row g-2 mb-3 list-filters" method="get" action="{{ request.path }}">
-  {% if search_enabled %}
-  <div class="col-md-4">
-    <label class="visually-hidden" for="list-search">Search</label>
-    <input id="list-search" type="search" name="q" value="{{ request.GET.q }}" class="form-control"
-           placeholder="{{ search_placeholder }}" autocomplete="off"
-           hx-get="{{ request.path }}" hx-trigger="input changed delay:300ms, search"
-           hx-target="#results" hx-include="closest form" hx-push-url="true">
+<form class="card filter-bar list-filters" method="get" action="{{ request.path }}">
+  <div class="row align-items-center">
+    {% if search_enabled %}
+    <div class="col-12 col-lg">
+      <label class="visually-hidden" for="list-search">Search</label>
+      <div class="input-icon">
+        <i class="bi bi-search"></i>
+        <input id="list-search" type="search" name="q" value="{{ request.GET.q }}" class="form-control"
+               placeholder="{{ search_placeholder }}" autocomplete="off"
+               hx-get="{{ request.path }}" hx-trigger="input changed delay:300ms, search"
+               hx-target="#results" hx-include="closest form" hx-push-url="true">
+      </div>
+    </div>
+    {% endif %}
+    {% for f in filters %}
+    <div class="col-sm-6 col-lg-auto">
+      <label class="visually-hidden" for="filter-{{ f.param }}">{{ f.label }}</label>
+      <select id="filter-{{ f.param }}" name="{{ f.param }}" class="form-select"
+              hx-get="{{ request.path }}" hx-trigger="change" hx-target="#results"
+              hx-include="closest form" hx-push-url="true">
+        <option value="">{% if f.all_label %}{{ f.all_label }}{% else %}{{ f.label }}: all{% endif %}</option>
+        {% for value, label in f.choices %}
+        <option value="{{ value }}"{% if f.current == value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endfor %}
+    {% block extra_filters %}{% endblock %}
+    <div class="col-auto">
+      <noscript><button type="submit" class="btn btn-outline-secondary">Apply</button></noscript>
+      <a class="btn btn-outline-secondary" href="{{ request.path }}" title="Reset filters"><i class="bi bi-arrow-counterclockwise"></i><span class="d-none d-xl-inline"> Reset</span></a>
+    </div>
   </div>
-  {% endif %}
-  {% for f in filters %}
-  <div class="col-md-auto">
-    <label class="visually-hidden" for="filter-{{ f.param }}">{{ f.label }}</label>
-    <select id="filter-{{ f.param }}" name="{{ f.param }}" class="form-select"
-            hx-get="{{ request.path }}" hx-trigger="change" hx-target="#results"
-            hx-include="closest form" hx-push-url="true">
-      <option value="">{{ f.label }}: all</option>
-      {% for value, label in f.choices %}
-      <option value="{{ value }}"{% if f.current == value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  {% endfor %}
-  {% block extra_filters %}{% endblock %}
-  <div class="col-md-auto"><noscript><button type="submit" class="btn btn-outline-secondary">Apply</button></noscript></div>
 </form>
 {% endif %}
 
 <div id="results">
 {% partialdef results inline %}
-  <div class="card shadow-sm">
+  <div class="card">
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
+        <thead class="app-thead">
           <tr>{% for label, accessor in columns %}<th scope="col">{{ label }}</th>{% endfor %}</tr>
         </thead>
         <tbody>
           {% for obj in object_list %}
           {% include row_template|default:"includes/row.html" %}
           {% empty %}
-          <tr><td colspan="{{ columns|length }}" class="text-center text-body-secondary py-4">{{ empty_message }}</td></tr>
+          <tr><td colspan="{{ columns|length }}"><div class="empty-state"><i class="bi bi-inbox"></i>{{ empty_message }}</div></td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+    {% if object_list and not is_paginated %}
+    <div class="px-3 py-2 small text-body-secondary border-top">Showing {{ object_list|length }} record{{ object_list|length|pluralize }}</div>
+    {% endif %}
   </div>
   {% include "includes/pagination.html" %}
 {% endpartialdef %}

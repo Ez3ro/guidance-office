@@ -3,7 +3,16 @@
 (function () {
   "use strict";
 
-  // Print and back buttons on report and form pages.
+  var root = document.documentElement;
+
+  function setTheme(theme, remember) {
+    root.setAttribute("data-bs-theme", theme);
+    if (remember) {
+      try { window.localStorage.setItem("gd-theme", theme); } catch (e) { /* ignore */ }
+    }
+  }
+
+  // Print, back and theme buttons.
   document.addEventListener("click", function (event) {
     var target = event.target.closest("[data-action]");
     if (!target) return;
@@ -11,7 +20,19 @@
       window.print();
     } else if (target.dataset.action === "back") {
       window.history.back();
+    } else if (target.dataset.action === "toggle-theme") {
+      setTheme(root.getAttribute("data-bs-theme") === "dark" ? "light" : "dark", true);
     }
+  });
+
+  // Paper is white: print in light mode, then restore the screen theme.
+  var themeBeforePrint = null;
+  window.addEventListener("beforeprint", function () {
+    themeBeforePrint = root.getAttribute("data-bs-theme");
+    setTheme("light", false);
+  });
+  window.addEventListener("afterprint", function () {
+    if (themeBeforePrint) setTheme(themeBeforePrint, false);
   });
 
   // Ask before destructive submits: <form data-confirm="Are you sure?">
@@ -42,8 +63,14 @@
     });
   }
 
-  function init(root) {
-    root.querySelectorAll("select[data-filterable]").forEach(enhanceSelect);
+  function init(scope) {
+    scope.querySelectorAll("select[data-filterable]").forEach(enhanceSelect);
+    // Bar widths from data-width="42" (percent). Set via the CSSOM because the
+    // Content-Security-Policy blocks inline style attributes.
+    scope.querySelectorAll("[data-width]").forEach(function (el) {
+      var pct = Math.max(0, Math.min(100, parseFloat(el.dataset.width) || 0));
+      el.style.width = pct + "%";
+    });
   }
 
   document.addEventListener("DOMContentLoaded", function () { init(document); });
