@@ -38,7 +38,7 @@ talking to a Supabase project in the same region. Plan on about an hour the firs
    | `FIELD_ENCRYPTION_KEYS` | `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`. **Save a copy in a password manager.** |
    | `DATABASE_URL` | the transaction pooler URL from step 1.4 |
    | `CRON_SECRET` | another long random string |
-   | `SITE_NAME` | e.g. `Guidance Office – Sample NHS` |
+   | `SITE_NAME` | optional, defaults to `GuidanceDesk` |
    | `STORAGE_S3_BUCKET` | `guidance-files` |
    | `STORAGE_S3_ENDPOINT_URL` | `https://<project-ref>.storage.supabase.co/storage/v1/s3` |
    | `STORAGE_S3_REGION` | the region shown on the S3 page, e.g. `ap-southeast-1` |

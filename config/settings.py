@@ -302,7 +302,7 @@ if not FIELD_ENCRYPTION_KEYS:
         )
 
 # --- Application settings -----------------------------------------------------------------
-SITE_NAME = env("SITE_NAME", "Guidance Office Management System")
+SITE_NAME = env("SITE_NAME", "GuidanceDesk")
 CRON_SECRET = env("CRON_SECRET")
 REMINDER_LOOKAHEAD_DAYS = env_int("REMINDER_LOOKAHEAD_DAYS", 2)
 
