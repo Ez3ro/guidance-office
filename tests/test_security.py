@@ -48,12 +48,10 @@ class EncryptionTests(TestCase):
 
 
 class RoleTests(TestCase):
-    def test_admin_cannot_read_counseling_or_cases(self):
+    def test_admin_is_super_administrator(self):
         admin = make_user(Role.ADMIN)
         self.assertTrue(admin.is_staff and admin.is_superuser)
-        self.assertFalse(admin.has_cap(Cap.COUNSELING))
-        self.assertFalse(admin.has_cap(Cap.VIEW_LRP))
-        self.assertTrue(admin.has_cap(Cap.MANAGE_USERS))
+        self.assertTrue(all(admin.has_cap(cap) for cap in Cap))
 
     def test_school_head_sees_cases_but_not_session_notes(self):
         head = make_user(Role.SCHOOL_HEAD)

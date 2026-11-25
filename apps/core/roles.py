@@ -61,18 +61,10 @@ _GUIDANCE = frozenset(
 )
 
 ROLE_CAPABILITIES: dict[str, frozenset[Cap]] = {
-    # IT/system administration: users, settings and the audit trail, but no access to
-    # counseling notes, case narratives or confidential profile fields.
-    Role.ADMIN: frozenset(
-        {
-            Cap.VIEW_ALL_STUDENTS,
-            Cap.EDIT_STUDENTS,
-            Cap.MANAGE_USERS,
-            Cap.VIEW_AUDIT,
-            Cap.MANAGE_SETTINGS,
-            Cap.REPORT_CONCERN,
-        }
-    ),
+    # Super administrator: every capability, including counseling notes, discipline and
+    # protection case files (the school's choice). Restricted counseling sessions still
+    # open only for the counselor who recorded them; that check is per record, not per role.
+    Role.ADMIN: frozenset(Cap),
     # Chairs the Child Protection Committee and receives investigation reports.
     # Sees reports and case files but not counseling session notes.
     Role.SCHOOL_HEAD: frozenset(

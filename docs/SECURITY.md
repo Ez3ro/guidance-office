@@ -12,17 +12,20 @@ as CPC members, which adds case access to their role.
 
 | | Admin | School Head | Counselor / Designate | LFO | Teacher | + CPC flag |
 | --- | :-: | :-: | :-: | :-: | :-: | :-: |
-| Learner profiles | all (basic) | all | all + confidential notes | all | own advisory class | |
-| Counseling sessions and notes | – | – | ✓ | – | – | |
-| Violations / disciplinary cases | – | ✓ | ✓ | ✓ | report; own reports and advisees | |
-| Interventions | – | view | ✓ | ✓ | – | |
-| Protection (LRP) cases | report only | ✓ incl. restricted | ✓ incl. restricted | ✓ except restricted | report only | ✓ except restricted |
-| Reports | – | ✓ | ✓ | ✓ | – | LRP reports |
+| Learner profiles | all + confidential notes | all | all + confidential notes | all | own advisory class | |
+| Counseling sessions and notes | ✓ | – | ✓ | – | – | |
+| Violations / disciplinary cases | ✓ | ✓ | ✓ | ✓ | report; own reports and advisees | |
+| Interventions | ✓ | view | ✓ | ✓ | – | |
+| Protection (LRP) cases | ✓ incl. restricted | ✓ incl. restricted | ✓ incl. restricted | ✓ except restricted | report only | ✓ except restricted |
+| Reports | ✓ | ✓ | ✓ | ✓ | – | LRP reports |
 | Users, settings | ✓ | – | – | – | – | |
 | Audit log | ✓ | ✓ | – | – | – | |
 
-- The **System Administrator** manages accounts and settings but can't read counseling
-  notes or case files. Confidential models aren't registered in the Django admin at all.
+- The **System Administrator** is a super administrator: it holds every permission,
+  including counseling notes and protection case files. Give this role only to the person
+  accountable for the guidance office's records, use a strong unique password, and keep
+  the number of admin accounts small. Every record view is still written to the audit log.
+  Confidential models aren't registered in the Django admin at all.
 - A **restricted** protection case (set automatically for sexual abuse, sexual
   exploitation and similar) is visible only to the School Head and guidance staff, and
   its deadline follow-ups are hidden from everyone else.
