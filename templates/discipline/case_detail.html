@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ object.case_number }}{% endblock %}
+{% block content %}
+{% with c=object %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ c.case_number }} · {{ c.title }}</h1>
+    <div class="text-body-secondary">{% badge c.status c.get_status_display %}{% if c.is_bullying %} <span class="badge text-bg-danger-subtle text-danger-emphasis">Bullying</span>{% endif %} · Handled by {{ c.handled_by|default:"—" }}</div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    {% for a in actions %}<a class="btn btn-sm btn-{{ a.style }}" href="{{ a.url }}">{% if a.icon %}<i class="bi {{ a.icon }}"></i> {% endif %}{{ a.label }}</a>{% endfor %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">Case</div>
+      <div class="card-body">
+        <dl class="row mb-0 detail-list">
+          <dt class="col-sm-4">Respondent(s)</dt>
+          <dd class="col-sm-8">{% for s in c.respondents.all %}<a href="{{ s.get_absolute_url }}">{{ s.full_name }}</a>{% if not forloop.last %}<br>{% endif %}{% endfor %}</dd>
+          <dt class="col-sm-4">Facts of the case</dt><dd class="col-sm-8 text-prewrap">{{ c.summary|cell }}</dd>
+          {% if caps.view_lrp and c.protection_case %}<dt class="col-sm-4">Protection case</dt><dd class="col-sm-8"><a href="{{ c.protection_case.get_absolute_url }}">{{ c.protection_case }}</a></dd>{% endif %}
+        </dl>
+      </div>
+    </div>
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">Violation records</div>
+      <ul class="list-group list-group-flush">
+        {% for v in violations %}
+        <li class="list-group-item"><a href="{{ v.get_absolute_url }}">{{ v.offense_type.name }}</a> · {{ v.student.display_name }} · {{ v.incident_date|date:"M j, Y" }}</li>
+        {% empty %}<li class="list-group-item text-body-secondary">None linked.</li>{% endfor %}
+      </ul>
+    </div>
+    <div class="card shadow-sm mb-3" id="sanctions">
+      <div class="card-header fw-semibold">Sanctions applied</div>
+      <ul class="list-group list-group-flush">
+        {% for a in applied_sanctions %}
+        <li class="list-group-item">
+          <strong>{{ a.sanction.name }}</strong> · {{ a.student.display_name }}
+          {% if a.start_date %}<span class="text-body-secondary small"> · {{ a.start_date|date:"M j" }}{% if a.end_date %}–{{ a.end_date|date:"M j, Y" }}{% endif %}</span>{% endif %}
+          {% if a.notes %}<div class="small text-body-secondary">{{ a.notes }}</div>{% endif %}
+        </li>
+        {% empty %}<li class="list-group-item text-body-secondary">None recorded.</li>{% endfor %}
+      </ul>
+      {% if sanction_form %}
+      <div class="card-body border-top">
+        <form method="post" action="{% url 'discipline:add_sanction' c.pk %}">
+          {% csrf_token %}
+          {% include "includes/form_fields.html" with form=sanction_form %}
+          <button type="submit" class="btn btn-sm btn-outline-primary">Record sanction</button>
+        </form>
+        <p class="form-text mb-0">Sanctions must follow positive discipline and due process: no corporal punishment or humiliating measures (DO 006, s. 2026).</p>
+      </div>
+      {% endif %}
+    </div>
+    {% include "includes/attachments.html" %}
+  </div>
+  <div class="col-lg-5">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">Due process (DO 006, s. 2026)</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">
+          <div class="fw-semibold">1. Written notice to the respondent</div>
+          <div class="small">{% if c.notice_served_on %}Served {{ c.notice_served_on|date:"M j, Y" }}{% else %}<span class="text-body-secondary">Not yet served</span>{% endif %}</div>
+        </li>
+        <li class="list-group-item">
+          <div class="fw-semibold">2. Answer within 10 calendar days</div>
+          <div class="small">
+            {% if c.answer_due %}Due {{ c.answer_due|date:"M j, Y" }}. {% endif %}
+            {% if c.answer_received_on %}Received {{ c.answer_received_on|date:"M j, Y" }}.{% endif %}
+          </div>
+          {% if c.answer_summary %}<div class="small text-prewrap mt-1">{{ c.answer_summary }}</div>{% endif %}
+        </li>
+        <li class="list-group-item">
+          <div class="fw-semibold">3. Written decision</div>
+          <div class="small">{% if c.decision_date %}Issued {{ c.decision_date|date:"M j, Y" }}{% else %}<span class="text-body-secondary">Pending</span>{% endif %}</div>
+          {% if c.decision %}<div class="small text-prewrap mt-1">{{ c.decision }}</div>{% endif %}
+        </li>
+        <li class="list-group-item">
+          <div class="fw-semibold">4. Appeal within {{ c.appeal_days }} days</div>
+          <div class="small">To the {{ c.appeal_body }}.{% if c.appeal_deadline %} Deadline {{ c.appeal_deadline|date:"M j, Y" }}.{% endif %}{% if c.appeal_filed_on %} Appeal filed {{ c.appeal_filed_on|date:"M j, Y" }}.{% endif %}</div>
+          {% if c.appeal_outcome %}<div class="small text-prewrap mt-1">{{ c.appeal_outcome }}</div>{% endif %}
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}

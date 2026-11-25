@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}{% endblock %} · {{ school.name }}</title>
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/print.css' %}">
+  <script src="{% static 'js/app.js' %}" defer></script>
+</head>
+<body class="printable">
+  <div class="print-toolbar d-print-none">
+    <button type="button" class="btn btn-primary btn-sm" data-action="print">Print / save as PDF</button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-action="back">Back</button>
+    <span class="small text-body-secondary ms-2">Confidential. This printout is logged.</span>
+  </div>
+  {% block pages %}
+  <div class="sheet">
+    {% include "printable/_header.html" %}
+    {% block body %}{% endblock %}
+    <footer class="sheet-footer">Printed {{ printed_at|date:"M j, Y g:i A" }} by {{ user.display_name }} · CONFIDENTIAL</footer>
+  </div>
+  {% endblock %}
+</body>
+</html>

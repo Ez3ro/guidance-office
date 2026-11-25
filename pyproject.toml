@@ -1,0 +1,35 @@
+[project]
+name = "guidance-office"
+version = "0.1.0"
+description = "Guidance Office Management System for DepEd schools: guidance profiles, discipline, counseling, child protection (DO 40 s. 2012 / DO 006 s. 2026), reports and audit log."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "Django>=6.1,<6.2",
+    "psycopg[binary]>=3.2",
+    "dj-database-url>=3.0",
+    "whitenoise>=6.9",
+    "cryptography>=45",
+    "openpyxl>=3.1",
+    "django-axes>=8.0",
+    "django-storages[s3]>=1.14",
+    "python-dotenv>=1.1",
+]
+
+[dependency-groups]
+dev = ["ruff>=0.14"]
+
+# Vercel runs this after installing dependencies and before deploying.
+# It applies migrations on production builds only (see build.py).
+[tool.vercel.scripts]
+build = "python build.py"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["**/migrations/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ"]
+# Layout is handled by `ruff format`; long user-facing strings are left intact.
+ignore = ["DJ001", "E501"]

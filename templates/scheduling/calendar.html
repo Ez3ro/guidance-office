@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Guidance calendar{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Guidance calendar</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'scheduling:followups' %}"><i class="bi bi-list-check"></i> Follow-ups</a>
+    <a class="btn btn-primary" href="{% url 'scheduling:event_create' %}"><i class="bi bi-plus-lg"></i> New event</a>
+  </div>
+</div>
+{% partialdef calendar inline %}
+<div id="calendar" class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <a class="btn btn-sm btn-outline-secondary" href="?year={{ prev.year }}&month={{ prev.month }}"
+       hx-get="{% url 'scheduling:calendar' %}?year={{ prev.year }}&month={{ prev.month }}" hx-target="#calendar" hx-swap="outerHTML" hx-push-url="true">
+      <i class="bi bi-chevron-left"></i><span class="visually-hidden">Previous month</span>
+    </a>
+    <h2 class="h5 mb-0">{{ month_label }}</h2>
+    <a class="btn btn-sm btn-outline-secondary" href="?year={{ next.year }}&month={{ next.month }}"
+       hx-get="{% url 'scheduling:calendar' %}?year={{ next.year }}&month={{ next.month }}" hx-target="#calendar" hx-swap="outerHTML" hx-push-url="true">
+      <i class="bi bi-chevron-right"></i><span class="visually-hidden">Next month</span>
+    </a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-bordered calendar-grid mb-0">
+      <thead><tr>{% for name in weekday_names %}<th scope="col" class="text-center small">{{ name }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for week in weeks %}
+        <tr>
+          {% for day, items in week %}
+          <td class="{% if day.month != month %}other-month{% endif %}{% if day == today %} is-today{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+              <span class="day-number">{{ day.day }}</span>
+              <a class="add-link" href="{% url 'scheduling:event_create' %}?date={{ day|date:'Y-m-d' }}" title="Add event on {{ day|date:'M j' }}"><i class="bi bi-plus"></i><span class="visually-hidden">Add event</span></a>
+            </div>
+            {% for item in items %}
+            <a class="cal-item cal-{{ item.kind }}" href="{{ item.url }}">{% if item.time %}<span class="cal-time">{{ item.time|time:"g:iA"|lower }}</span> {% endif %}{{ item.title }}</a>
+            {% endfor %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer small d-flex flex-wrap gap-3">
+    <span><span class="legend cal-event"></span> Event</span>
+    <span><span class="legend cal-session"></span> Counseling session</span>
+    <span><span class="legend cal-due"></span> Follow-up due</span>
+    <span><span class="legend cal-overdue"></span> Overdue</span>
+  </div>
+</div>
+{% endpartialdef %}
+{% endblock %}

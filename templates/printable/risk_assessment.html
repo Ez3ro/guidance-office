@@ -1,0 +1,35 @@
+{% extends "printable/base.html" %}
+{% block title %}Risk assessment {{ case.case_number }}{% endblock %}
+{% block body %}
+<h1 class="form-title">Initial Risk Assessment Form</h1>
+<p class="form-subtitle">DO 006, s. 2026 – Annex H</p>
+<table class="form-grid">
+  <tr><th>Case no.</th><td>{{ case.case_number }}</td><th>Date/time of assessment</th><td>{{ assessment.assessed_at|localdt|date:"M j, Y g:i A" }}</td></tr>
+  <tr><th>Assessed by</th><td colspan="3">{{ assessment.assessed_by|default:"" }}</td></tr>
+</table>
+
+<h2 class="form-section">Risk factors identified</h2>
+<div class="text-box">{{ assessment.risk_factors|linebreaksbr }}</div>
+
+<h2 class="form-section">Assessment</h2>
+<table class="form-grid">
+  <thead><tr><th>Probability of further harm</th><th>Impact on the learner</th><th>Overall risk level</th></tr></thead>
+  <tbody><tr><td>{{ assessment.get_probability_display }}</td><td>{{ assessment.get_impact_display }}</td><td><strong>{{ assessment.overall_level|upper }}</strong></td></tr></tbody>
+</table>
+<table class="form-grid">
+  <tr><td>{% if assessment.immediate_danger %}☒{% else %}☐{% endif %} Learner is in immediate danger</td><td>{% if assessment.needs_medical_care %}☒{% else %}☐{% endif %} Needs medical care</td></tr>
+  <tr><td>{% if assessment.needs_pfa %}☒{% else %}☐{% endif %} Needs psychological first aid</td><td>{% if assessment.needs_safety_plan %}☒{% else %}☐{% endif %} Needs a safety plan / separation from respondent</td></tr>
+  <tr><td colspan="2">{% if assessment.parents_notified %}☒ Parents / guardians notified{% else %}☐ Parents / guardians not notified – reason: {{ assessment.parents_not_notified_reason }}{% endif %}</td></tr>
+</table>
+
+<h2 class="form-section">Action plan</h2>
+<table class="form-grid">
+  <thead><tr><th>Action needed</th><th>Responsible person(s)</th><th>Timeline</th></tr></thead>
+  <tbody><tr><td>{{ assessment.actions_needed|linebreaksbr }}</td><td>{{ assessment.responsible_persons }}</td><td>{{ assessment.timeline }}</td></tr></tbody>
+</table>
+
+<div class="signatures">
+  <div><div class="sig-line"></div>Assessed by</div>
+  <div><div class="sig-line"></div>Noted by (CPC Chair / School Head)</div>
+</div>
+{% endblock %}

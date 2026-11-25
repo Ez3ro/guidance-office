@@ -1,0 +1,29 @@
+{% extends "printable/base.html" %}
+{% block title %}Guidance profile{% endblock %}
+{% block body %}
+<h1 class="form-title">Learner Guidance Profile</h1>
+<p class="form-subtitle">Confidential – for guidance office use only</p>
+<table class="form-grid">
+  <tr><th>Name</th><td colspan="3">{{ student.full_name }}</td></tr>
+  <tr><th>LRN</th><td>{{ student.lrn|default:"" }}</td><th>Grade &amp; section</th><td>{% if section %}{{ section.short_label }}{% endif %}</td></tr>
+  <tr><th>Sex</th><td>{{ student.get_sex_display }}</td><th>Birth date / age</th><td>{{ student.birth_date|date:"M j, Y" }}{% if student.age is not None %} ({{ student.age }}){% endif %}</td></tr>
+  <tr><th>Address</th><td colspan="3">{{ student.address }} {{ student.barangay }} {{ student.municipality }} {{ student.province }}</td></tr>
+  <tr><th>Parent / guardian</th><td>{{ student.guardian_name }} {% if student.guardian_relationship %}({{ student.guardian_relationship }}){% endif %}</td><th>Contact</th><td>{{ student.guardian_contact }}</td></tr>
+</table>
+<h2 class="form-section">Family background</h2>
+<table class="form-grid">
+  <tr><th>Father</th><td>{{ student.father_name }}</td><th>Occupation</th><td>{{ student.father_occupation }}</td></tr>
+  <tr><th>Mother</th><td>{{ student.mother_name }}</td><th>Occupation</th><td>{{ student.mother_occupation }}</td></tr>
+  <tr><th>Parents' status</th><td>{{ student.get_parents_status_display }}</td><th>Lives with</th><td>{{ student.get_living_with_display }}</td></tr>
+  <tr><th>Siblings</th><td>{{ student.number_of_siblings|default:"" }}</td><th>Birth order</th><td>{{ student.birth_order|default:"" }}</td></tr>
+  <tr><th>Program flags</th><td colspan="3">{% if student.is_4ps_beneficiary %}4Ps · {% endif %}{% if student.is_ip_learner %}IP learner · {% endif %}{% if student.has_disability %}Learner with disability{% endif %}</td></tr>
+</table>
+<h2 class="form-section">Interests, talents and goals</h2>
+<div class="text-box">{{ student.interests|linebreaksbr|default:"&nbsp;" }}</div>
+<h2 class="form-section">Health / special needs</h2>
+<div class="text-box">{{ student.health_notes|linebreaksbr|default:"&nbsp;" }}</div>
+<h2 class="form-section">Family situation</h2>
+<div class="text-box">{{ student.family_situation|linebreaksbr|default:"&nbsp;" }}</div>
+<h2 class="form-section">Counselor's notes</h2>
+<div class="text-box">{{ student.guidance_notes|linebreaksbr|default:"&nbsp;" }}</div>
+{% endblock %}

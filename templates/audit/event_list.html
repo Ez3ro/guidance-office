@@ -1,0 +1,16 @@
+{% extends "crud/list.html" %}
+{% block header_actions %}
+<a class="btn btn-outline-secondary" href="{% url 'audit:export' %}?{{ request.GET.urlencode }}"><i class="bi bi-filetype-csv"></i> Export CSV</a>
+{% endblock %}
+{% block extra_filters %}
+<div class="col-md-auto">
+  <label class="visually-hidden" for="from">From</label>
+  <input id="from" type="date" name="from" value="{{ request.GET.from }}" class="form-control"
+         hx-get="{{ request.path }}" hx-trigger="change" hx-target="#results" hx-include="closest form" hx-push-url="true">
+</div>
+<div class="col-md-auto">
+  <label class="visually-hidden" for="to">To</label>
+  <input id="to" type="date" name="to" value="{{ request.GET.to }}" class="form-control"
+         hx-get="{{ request.path }}" hx-trigger="change" hx-target="#results" hx-include="closest form" hx-push-url="true">
+</div>
+{% endblock %}

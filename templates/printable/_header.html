@@ -1,0 +1,8 @@
+<header class="deped-header">
+  <div>Republic of the Philippines</div>
+  <div class="dept">Department of Education</div>
+  {% if school.region %}<div>{{ school.region }}</div>{% endif %}
+  {% if school.division %}<div>{{ school.division }}</div>{% endif %}
+  <div class="school">{{ school.name }}</div>
+  <div class="small">{% if school.school_id %}School ID {{ school.school_id }}{% endif %}{% if school.address %} · {{ school.address }}{% endif %}</div>
+</header>

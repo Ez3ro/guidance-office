@@ -1,0 +1,31 @@
+{% extends "printable/base.html" %}
+{% block title %}Confiscation slip{% endblock %}
+{% block body %}
+<h1 class="form-title">Confiscation Slip</h1>
+<p class="form-subtitle">DO 006, s. 2026 – {% if is_device %}Annex J (portable device){% else %}Annex F (prohibited item){% endif %}</p>
+<table class="form-grid">
+  <tr><th>Learner</th><td>{{ student.full_name }}</td><th>Grade &amp; section</th><td>{% if section %}{{ section.short_label }}{% endif %}</td></tr>
+  <tr><th>Date</th><td>{{ violation.incident_date|date:"M j, Y" }}</td><th>Time</th><td>{{ violation.incident_time|time:"g:i A" }}</td></tr>
+  <tr><th>Item confiscated</th><td colspan="3">{{ violation.confiscated_item }}</td></tr>
+  <tr><th>Place</th><td>{{ violation.location }}</td><th>Offence</th><td>{{ violation.offense_type.name }}{% if is_device %} ({{ violation.offense_ordinal }}){% endif %}</td></tr>
+  <tr><th>Confiscated by</th><td colspan="3">{{ violation.reported_by|default:"" }}</td></tr>
+</table>
+{% if is_device %}
+<h2 class="form-section">Release of the device (Annex G progressive sanctions)</h2>
+<table class="form-grid">
+  <tr><td>{% if violation.offense_count == 1 %}☒{% else %}☐{% endif %} 1st offence – returned to the learner at the end of the subject period</td></tr>
+  <tr><td>{% if violation.offense_count == 2 %}☒{% else %}☐{% endif %} 2nd offence – kept until the end of class hours; parent / guardian notified</td></tr>
+  <tr><td>{% if violation.offense_count >= 3 %}☒{% else %}☐{% endif %} 3rd offence onwards – deposited with the School Head; released to the parent / guardian only</td></tr>
+</table>
+{% else %}
+<p class="mt-3">The item will be released only to the learner's parent or guardian, unless it must be turned over to the proper authorities.</p>
+{% endif %}
+<h2 class="form-section">Claimed / returned</h2>
+<table class="form-grid">
+  <tr><th>Returned on</th><td>{{ violation.item_returned_on|date:"M j, Y" }}</td><th>Returned to</th><td>{{ violation.item_returned_to }}</td></tr>
+</table>
+<div class="signatures">
+  <div><div class="sig-line"></div>Confiscated by</div>
+  <div><div class="sig-line"></div>Received back by (signature over printed name)</div>
+</div>
+{% endblock %}

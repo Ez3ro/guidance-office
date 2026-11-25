@@ -1,0 +1,12 @@
+{% autoescape off %}Good morning {{ user.first_name|default:user.username }},
+
+These follow-ups in {{ site_name }} need your attention:
+{% if overdue %}
+OVERDUE
+{% for f in overdue %}- {{ f.title }} (was due {{ f.due_at|localdt|date:"M j, Y g:i A" }})
+{% endfor %}{% endif %}{% if upcoming %}
+DUE SOON
+{% for f in upcoming %}- {{ f.title }} (due {{ f.due_at|localdt|date:"M j, Y g:i A" }})
+{% endfor %}{% endif %}
+Sign in to see the details. Case details are never sent by email.
+{% endautoescape %}

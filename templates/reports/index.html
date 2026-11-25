@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">Reports</h1>
+<p class="text-body-secondary">Summaries are de-identified: they use case numbers, sex and grade level, never learners' names. Every view and export is logged.</p>
+<div class="row g-3 mb-4">
+  {% for r in reports %}
+  <div class="col-md-6 col-xl-4">
+    <a class="card shadow-sm h-100 report-card" href="{% url 'reports:report' r.key %}">
+      <div class="card-body">
+        <h2 class="h6 mb-1">{{ r.title }}</h2>
+        <div class="small text-body-secondary">For: {{ r.audience }}</div>
+        <div class="small text-body-secondary">Basis: {{ r.basis }}</div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+<h2 class="h5">Printable forms</h2>
+<p class="text-body-secondary mb-0">Case forms print from the record they belong to: the Incident Report and Intake Sheet, Initial Risk Assessment (Annex H) and fact-finding report from a protection case; call slips (Annex K) and confiscation slips (Annexes F and J) from a violation or disciplinary case; and the guidance profile from a learner's page.</p>
+{% endblock %}

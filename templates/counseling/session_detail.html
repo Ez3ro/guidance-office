@@ -1,0 +1,14 @@
+{% extends "crud/detail.html" %}
+{% block heading %}
+<h1 class="h3 mb-1">{{ object.get_session_type_display }}</h1>
+<div class="text-body-secondary">
+  {% for s in object.students.all %}<a href="{{ s.get_absolute_url }}">{{ s.full_name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+  · {{ object.session_date|date:"M j, Y" }} · {% badge object.status object.get_status_display %}
+</div>
+{% endblock %}
+{% block before_sections %}
+<div class="alert alert-warning small"><i class="bi bi-lock"></i> Confidential counseling record. Viewing is logged. Share only what's needed for the learner's safety and care (RA 9258; RA 10173).</div>
+{% endblock %}
+{% block after_sections %}
+{% include "includes/attachments.html" %}
+{% endblock %}

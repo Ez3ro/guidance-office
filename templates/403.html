@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Not allowed{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-md-4">
+  <div class="col-lg-7">
+    <h1 class="h3">You don't have access to this</h1>
+    <p>Your role doesn't include this record or page. If you need it for your work, ask the School Head or the system administrator.</p>
+    <a class="btn btn-primary" href="{% url 'core:dashboard' %}">Back to the dashboard</a>
+  </div>
+</div>
+{% endblock %}

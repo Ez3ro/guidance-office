@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ report.title }}{% endblock %}
+{% block content %}
+<div class="d-print-none">
+  <a class="small" href="{% url 'reports:index' %}"><i class="bi bi-arrow-left"></i> Reports</a>
+  <form method="get" class="row g-2 align-items-end my-3">
+    <div class="col-md-4">
+      <label class="form-label" for="{{ form.school_year.id_for_label }}">School year</label>
+      {{ form.school_year }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="{{ form.start.id_for_label }}">From</label>
+      {{ form.start }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="{{ form.end.id_for_label }}">To</label>
+      {{ form.end }}
+    </div>
+    <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100">Update</button></div>
+  </form>
+  <div class="d-flex gap-2 mb-3">
+    <button type="button" class="btn btn-outline-secondary" data-action="print"><i class="bi bi-printer"></i> Print / save as PDF</button>
+    <a class="btn btn-outline-success" href="?{% if query %}{{ query }}&amp;{% endif %}format=xlsx"><i class="bi bi-file-earmark-excel"></i> Download Excel</a>
+  </div>
+</div>
+
+<div class="report-page">
+  <header class="deped-header text-center mb-3">
+    <div>Republic of the Philippines</div>
+    <div class="fw-semibold">Department of Education</div>
+    {% if school.region %}<div>{{ school.region }}</div>{% endif %}
+    {% if school.division %}<div>{{ school.division }}</div>{% endif %}
+    <div class="fw-semibold">{{ school.name }}{% if school.school_id %} (School ID {{ school.school_id }}){% endif %}</div>
+  </header>
+  <h1 class="h4 text-center mb-1">{{ report.title }}</h1>
+  <p class="text-center mb-1">{{ report.period_label }}</p>
+  {% if report.description %}<p class="text-center small text-body-secondary">{{ report.description }}</p>{% endif %}
+
+  {% for table in report.tables %}
+  <section class="mb-4 report-table">
+    <h2 class="h6">{{ table.title }}</h2>
+    {% if table.note %}<p class="small text-body-secondary mb-1">{{ table.note }}</p>{% endif %}
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle">
+        <thead class="table-light"><tr>{% for h in table.headers %}<th scope="col">{{ h }}</th>{% endfor %}</tr></thead>
+        <tbody>
+          {% for row in table.rows %}
+          <tr{% if row.0|stringformat:"s"|slice:":5" == "Total" %} class="fw-semibold"{% endif %}>{% for value in row %}<td>{{ value }}</td>{% endfor %}</tr>
+          {% empty %}
+          <tr><td colspan="{{ table.headers|length }}" class="text-body-secondary">No data for this period.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endfor %}
+
+  <div class="signatures mt-5">
+    <div><div class="sig-line"></div><div>Prepared by</div><div class="small">{{ school.guidance_head_name|default:"Guidance Counselor / Coordinator" }}</div></div>
+    <div><div class="sig-line"></div><div>Noted by</div><div class="small">{{ school.school_head_name|default:"School Head" }}</div></div>
+  </div>
+  <p class="small text-body-secondary mt-4">Generated {% now "M j, Y g:i A" %} by {{ user.display_name }}.</p>
+</div>
+{% endblock %}

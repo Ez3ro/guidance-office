@@ -1,0 +1,34 @@
+{% extends "crud/detail.html" %}
+{% block heading %}
+<h1 class="h3 mb-1">{{ object.title }}</h1>
+<div class="text-body-secondary"><a href="{{ object.student.get_absolute_url }}">{{ object.student.full_name }}</a> · {{ object.intervention_type }} · {% badge object.status object.get_status_display %}</div>
+{% endblock %}
+{% block after_sections %}
+<div class="card shadow-sm mb-3" id="progress">
+  <div class="card-header fw-semibold">Progress notes</div>
+  {% partialdef progress inline %}
+  <div id="progress-body">
+    <ul class="list-group list-group-flush">
+      {% for note in progress_notes %}
+      <li class="list-group-item">
+        <div class="small text-body-secondary">{{ note.date|date:"M j, Y" }} · {{ note.recorded_by|default:"—" }}</div>
+        <div class="text-prewrap">{{ note.note }}</div>
+      </li>
+      {% empty %}
+      <li class="list-group-item text-body-secondary">No progress notes yet.</li>
+      {% endfor %}
+    </ul>
+    {% if progress_form %}
+    <div class="card-body border-top">
+      <form method="post" action="{% url 'interventions:add_progress' object.pk %}" hx-post="{% url 'interventions:add_progress' object.pk %}" hx-target="#progress-body" hx-swap="outerHTML">
+        {% csrf_token %}
+        {% include "includes/form_fields.html" with form=progress_form %}
+        <button type="submit" class="btn btn-sm btn-outline-primary">Add note</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% endpartialdef %}
+</div>
+{% include "includes/attachments.html" %}
+{% endblock %}

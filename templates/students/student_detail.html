@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ object.full_name }}{% endblock %}
+{% block content %}
+{% with s=object %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+  <div class="d-flex align-items-center gap-3">
+    <div class="avatar-initials" aria-hidden="true">{{ s.first_name|first }}{{ s.last_name|first }}</div>
+    <div>
+      <h1 class="h3 mb-1">{{ s.full_name }}</h1>
+      <div class="text-body-secondary">
+        LRN {{ s.lrn|default:"not recorded" }} · {{ s.grade_section }} · {{ s.get_sex_display }}{% if s.age is not None %} · {{ s.age }} years old{% endif %}
+        · {% badge s.status s.get_status_display %}
+      </div>
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    {% for a in actions %}
+    <a class="btn btn-sm btn-{{ a.style }}" href="{{ a.url }}">{% if a.icon %}<i class="bi {{ a.icon }}"></i> {% endif %}{{ a.label }}</a>
+    {% endfor %}
+    {% if show_confidential %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'reports:guidance_profile' s.pk %}"><i class="bi bi-printer"></i> Print profile</a>{% endif %}
+  </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+  <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-timeline" type="button" role="tab">Case history &amp; timeline</button></li>
+  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-profile" type="button" role="tab">Guidance profile</button></li>
+</ul>
+
+<div class="tab-content">
+  <div class="tab-pane fade show active" id="tab-timeline" role="tabpanel">
+    <div class="btn-group flex-wrap mb-3" role="group" aria-label="Filter timeline">
+      <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="{% url 'students:timeline' s.pk %}" hx-target="#timeline" hx-swap="outerHTML">All</button>
+      {% for key, meta in timeline_kinds.items %}
+      <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="{% url 'students:timeline' s.pk %}?kind={{ key }}" hx-target="#timeline" hx-swap="outerHTML">{{ meta.0 }}</button>
+      {% endfor %}
+    </div>
+    {% partialdef timeline inline %}
+    <div id="timeline">
+      {% if timeline %}
+      <ol class="timeline list-unstyled">
+        {% for entry in timeline %}
+        <li class="timeline-item timeline-{{ entry.style }}">
+          <div class="timeline-icon"><i class="bi {{ entry.icon }}"></i></div>
+          <div class="timeline-body card shadow-sm">
+            <div class="card-body py-2">
+              <div class="d-flex flex-wrap justify-content-between gap-2">
+                <span class="fw-semibold">{% if entry.url %}<a href="{{ entry.url }}">{{ entry.title }}</a>{% else %}{{ entry.title }}{% endif %}</span>
+                <span class="small text-body-secondary">{{ entry.when|localdt|date:"M j, Y" }} · {{ entry.label }}</span>
+              </div>
+              {% if entry.detail %}<div class="small text-body-secondary">{{ entry.detail }}</div>{% endif %}
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p class="text-body-secondary">Nothing on record{% if selected_kind %} of this type{% endif %} that you have access to.</p>
+      {% endif %}
+    </div>
+    {% endpartialdef %}
+  </div>
+
+  <div class="tab-pane fade" id="tab-profile" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="card shadow-sm h-100"><div class="card-header fw-semibold">Learner and contact</div><div class="card-body">
+          <dl class="row mb-0 detail-list">
+            <dt class="col-sm-5">Birth date</dt><dd class="col-sm-7">{{ s.birth_date|cell }}</dd>
+            <dt class="col-sm-5">Address</dt><dd class="col-sm-7">{{ s.address }} {{ s.barangay }} {{ s.municipality }} {{ s.province }}</dd>
+            <dt class="col-sm-5">Contact no.</dt><dd class="col-sm-7">{{ s.contact_number|cell }}</dd>
+            <dt class="col-sm-5">Parent / guardian</dt><dd class="col-sm-7">{{ s.guardian_name|cell }}{% if s.guardian_relationship %} ({{ s.guardian_relationship }}){% endif %}</dd>
+            <dt class="col-sm-5">Guardian contact</dt><dd class="col-sm-7">{{ s.guardian_contact|cell }}</dd>
+            <dt class="col-sm-5">4Ps / IP / LWD</dt><dd class="col-sm-7">{% if s.is_4ps_beneficiary %}4Ps beneficiary. {% endif %}{% if s.is_ip_learner %}IP learner. {% endif %}{% if s.has_disability %}Learner with disability.{% endif %}{% if not s.is_4ps_beneficiary and not s.is_ip_learner and not s.has_disability %}—{% endif %}</dd>
+          </dl>
+        </div></div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card shadow-sm h-100"><div class="card-header fw-semibold">Family background</div><div class="card-body">
+          <dl class="row mb-0 detail-list">
+            <dt class="col-sm-5">Father</dt><dd class="col-sm-7">{{ s.father_name|cell }}{% if s.father_occupation %} · {{ s.father_occupation }}{% endif %}</dd>
+            <dt class="col-sm-5">Mother</dt><dd class="col-sm-7">{{ s.mother_name|cell }}{% if s.mother_occupation %} · {{ s.mother_occupation }}{% endif %}</dd>
+            <dt class="col-sm-5">Parents' status</dt><dd class="col-sm-7">{{ s.get_parents_status_display|cell }}</dd>
+            <dt class="col-sm-5">Lives with</dt><dd class="col-sm-7">{{ s.get_living_with_display|cell }}</dd>
+            <dt class="col-sm-5">Siblings / birth order</dt><dd class="col-sm-7">{{ s.number_of_siblings|cell }} / {{ s.birth_order|cell }}</dd>
+            <dt class="col-sm-5">Interests and goals</dt><dd class="col-sm-7 text-prewrap">{{ s.interests|cell }}</dd>
+          </dl>
+        </div></div>
+      </div>
+      {% if show_confidential %}
+      <div class="col-12">
+        <div class="card shadow-sm border-warning-subtle"><div class="card-header fw-semibold"><i class="bi bi-lock"></i> Confidential (guidance staff only)</div><div class="card-body">
+          <dl class="row mb-0 detail-list">
+            <dt class="col-sm-3">Health / special needs</dt><dd class="col-sm-9 text-prewrap">{{ s.health_notes|cell }}</dd>
+            <dt class="col-sm-3">Disability details</dt><dd class="col-sm-9 text-prewrap">{{ s.disability_details|cell }}</dd>
+            <dt class="col-sm-3">Family situation</dt><dd class="col-sm-9 text-prewrap">{{ s.family_situation|cell }}</dd>
+            <dt class="col-sm-3">Counselor's notes</dt><dd class="col-sm-9 text-prewrap">{{ s.guidance_notes|cell }}</dd>
+          </dl>
+        </div></div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}

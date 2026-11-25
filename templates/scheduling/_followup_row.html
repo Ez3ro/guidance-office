@@ -1,0 +1,20 @@
+<tr id="followup-{{ obj.pk }}" class="{% if obj.is_overdue %}table-danger{% endif %}">
+  <td class="text-nowrap">{{ obj.due_at|localdt|date:"M j, Y g:i A" }}</td>
+  <td>
+    <a href="{{ obj.get_absolute_url }}">{{ obj.title }}</a>
+    {% if obj.related_url %}<a class="small ms-1" href="{{ obj.related_url }}" title="Open related record"><i class="bi bi-box-arrow-up-right"></i><span class="visually-hidden">Open related record</span></a>{% endif %}
+  </td>
+  <td>{{ obj.assigned_to|default:"Unassigned" }}</td>
+  <td>{{ obj.get_module_display }}</td>
+  <td>{{ obj.get_priority_display }}</td>
+  <td>{% badge obj.state obj.get_status_display %}</td>
+  <td class="text-end">
+    {% if obj.status == "open" %}
+    <form method="post" action="{% url 'scheduling:followup_done' obj.pk %}"
+          hx-post="{% url 'scheduling:followup_done' obj.pk %}" hx-target="#followup-{{ obj.pk }}" hx-swap="outerHTML">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check2"></i> Done</button>
+    </form>
+    {% endif %}
+  </td>
+</tr>

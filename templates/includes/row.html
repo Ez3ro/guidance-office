@@ -1,0 +1,5 @@
+<tr>
+  {% for label, accessor in columns %}
+  <td>{% if forloop.first and obj.get_absolute_url %}<a href="{{ obj.get_absolute_url }}">{{ obj|resolve:accessor|cell }}</a>{% else %}{{ obj|resolve:accessor|cell }}{% endif %}</td>
+  {% endfor %}
+</tr>

@@ -1,0 +1,17 @@
+<tr>
+  <td class="text-nowrap small">{{ obj.timestamp|localdt|date:"M j, Y g:i:s A" }}</td>
+  <td>{{ obj.actor_username|default:"system" }}</td>
+  <td>{% badge obj.action obj.get_action_display %}</td>
+  <td class="small">{{ obj.model_name|default:"—" }}</td>
+  <td class="small">{{ obj.object_repr|default:"—" }}</td>
+  <td class="small text-nowrap">{{ obj.ip_address|default:"—" }}</td>
+  <td class="small">
+    {% if obj.changes %}
+    <details><summary>Changes</summary>
+      <dl class="mb-0 audit-changes">
+        {% for field, change in obj.changes.items %}<dt>{{ field }}</dt><dd>{{ change }}</dd>{% endfor %}
+      </dl>
+    </details>
+    {% else %}—{% endif %}
+  </td>
+</tr>

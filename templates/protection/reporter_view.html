@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ object.case_number }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <h1 class="h3 mb-3">Your report {{ object.case_number }}</h1>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <dl class="row mb-0 detail-list">
+          <dt class="col-sm-4">Sent</dt><dd class="col-sm-8">{{ object.reported_at|localdt|date:"M j, Y g:i A" }}</dd>
+          <dt class="col-sm-4">Status</dt><dd class="col-sm-8">{{ object.get_status_display }}</dd>
+        </dl>
+        <p class="text-body-secondary small mt-3 mb-0">To protect everyone involved, case details are only visible to the guidance office and the Child Protection Committee. If you learn anything new, report it again or speak to the guidance counselor.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

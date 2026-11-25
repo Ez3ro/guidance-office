@@ -1,0 +1,37 @@
+{% attachments_panel object user as att %}
+<div class="card shadow-sm mb-3" id="attachments">
+  <div class="card-header fw-semibold"><i class="bi bi-paperclip"></i> Attachments</div>
+  <ul class="list-group list-group-flush">
+    {% for a in att.items %}
+    <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+      <div>
+        <a href="{% url 'core:attachment_download' a.pk %}"><i class="bi bi-file-earmark"></i> {{ a.original_name }}</a>
+        <small class="text-body-secondary">· {{ a.size|filesizeformat }} · {{ a.created_at|date:"M j, Y" }}{% if a.description %} · {{ a.description }}{% endif %}</small>
+      </div>
+      {% if att.can_edit %}
+      <form method="post" action="{% url 'core:attachment_delete' a.pk %}" data-confirm="Remove this attachment?">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i><span class="visually-hidden">Remove</span></button>
+      </form>
+      {% endif %}
+    </li>
+    {% empty %}
+    <li class="list-group-item text-body-secondary">No files attached.</li>
+    {% endfor %}
+  </ul>
+  {% if att.can_edit %}
+  <div class="card-body border-top">
+    {% if att.enabled %}
+    <form method="post" enctype="multipart/form-data" action="{{ att.upload_url }}" class="row g-2 align-items-end">
+      {% csrf_token %}
+      <div class="col-md-5"><label class="visually-hidden" for="att-file">File</label><input id="att-file" type="file" name="file" class="form-control" required></div>
+      <div class="col-md-5"><label class="visually-hidden" for="att-desc">Description</label><input id="att-desc" type="text" name="description" class="form-control" placeholder="Description (optional)" maxlength="255"></div>
+      <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100">Upload</button></div>
+      <div class="col-12 form-text">Up to {{ att.max_mb }} MB. Allowed: {{ att.extensions }}. Downloads are logged.</div>
+    </form>
+    {% else %}
+    <p class="text-body-secondary mb-0">File storage isn't configured, so uploads are switched off.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>

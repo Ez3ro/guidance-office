@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+  <div>
+    <p class="text-body-secondary mb-1">{% now "l, F j, Y" %}</p>
+    <h1 class="h3 mb-0">Good day, {{ user.first_name|default:user.username }}</h1>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    {% if caps.counseling %}<a class="btn btn-primary" href="{% url 'counseling:create' %}"><i class="bi bi-chat-heart"></i> Record session</a>{% endif %}
+    {% if caps.report_incident %}<a class="btn btn-outline-primary" href="{% url 'discipline:violation_create' %}"><i class="bi bi-exclamation-triangle"></i> Log violation</a>{% endif %}
+    <a class="btn btn-outline-danger" href="{% url 'protection:report' %}"><i class="bi bi-megaphone"></i> Report a concern</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <a class="stat-card card shadow-sm h-100" href="{% url 'scheduling:followups' %}">
+      <div class="card-body">
+        <div class="stat-label">My open follow-ups</div>
+        <div class="stat-value">{{ open_followup_count }}</div>
+        {% if overdue_count %}<div class="text-danger small fw-semibold"><i class="bi bi-alarm"></i> {{ overdue_count }} overdue</div>{% else %}<div class="text-body-secondary small">None overdue</div>{% endif %}
+      </div>
+    </a>
+  </div>
+  {% if lrp_open is not None %}
+  <div class="col-sm-6 col-lg-3">
+    <a class="stat-card card shadow-sm h-100" href="{% url 'protection:list' %}?status=reported">
+      <div class="card-body">
+        <div class="stat-label">Open LRP cases</div>
+        <div class="stat-value">{{ lrp_open }}</div>
+        {% if lrp_new %}<div class="text-danger small fw-semibold">{{ lrp_new }} awaiting risk assessment</div>{% else %}<div class="text-body-secondary small">All assessed</div>{% endif %}
+      </div>
+    </a>
+  </div>
+  {% endif %}
+  {% if violations_month is not None %}
+  <div class="col-sm-6 col-lg-3">
+    <a class="stat-card card shadow-sm h-100" href="{% url 'discipline:violations' %}">
+      <div class="card-body">
+        <div class="stat-label">Violations this month</div>
+        <div class="stat-value">{{ violations_month }}</div>
+        <div class="text-body-secondary small">{{ discipline_open }} open disciplinary case{{ discipline_open|pluralize }}</div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+  {% if sessions_month is not None %}
+  <div class="col-sm-6 col-lg-3">
+    <a class="stat-card card shadow-sm h-100" href="{% url 'counseling:list' %}?mine=1">
+      <div class="card-body">
+        <div class="stat-label">My sessions this month</div>
+        <div class="stat-value">{{ sessions_month }}</div>
+        <div class="text-body-secondary small">{{ interventions_ongoing|default:0 }} ongoing intervention{{ interventions_ongoing|pluralize }}</div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+  {% if advisees_count is not None %}
+  <div class="col-sm-6 col-lg-3">
+    <a class="stat-card card shadow-sm h-100" href="{% url 'students:list' %}">
+      <div class="card-body">
+        <div class="stat-label">Learners in my advisory class</div>
+        <div class="stat-value">{{ advisees_count }}</div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+  {% if recent_failed_logins is not None %}
+  <div class="col-sm-6 col-lg-3">
+    <a class="stat-card card shadow-sm h-100" href="{% url 'audit:list' %}?action=login_failed">
+      <div class="card-body">
+        <div class="stat-label">Failed sign-ins (24 h)</div>
+        <div class="stat-value">{{ recent_failed_logins }}</div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    {% if lrp_deadlines %}
+    <div class="card shadow-sm mb-3 border-danger-subtle">
+      <div class="card-header fw-semibold"><i class="bi bi-shield-exclamation text-danger"></i> DO 006 deadlines in the next 48 hours</div>
+      <ul class="list-group list-group-flush">
+        {% for f in lrp_deadlines %}
+        <li class="list-group-item d-flex justify-content-between gap-2">
+          <a href="{{ f.related_url|default:f.get_absolute_url }}">{{ f.title }}</a>
+          <span class="text-nowrap">{% badge f.state f.due_at|localdt|date:"M j, g:i A" %}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-list-check"></i> My follow-ups</span>
+        <a class="small" href="{% url 'scheduling:followups' %}">All follow-ups</a>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for f in my_followups %}
+        <li class="list-group-item d-flex justify-content-between gap-2">
+          <a href="{{ f.related_url|default:f.get_absolute_url }}">{{ f.title }}</a>
+          <span class="text-nowrap">{% badge f.state f.due_at|localdt|date:"M j" %}</span>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-body-secondary">Nothing assigned to you.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    {% if sessions_upcoming %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold"><i class="bi bi-chat-heart"></i> My scheduled sessions</div>
+      <ul class="list-group list-group-flush">
+        {% for s in sessions_upcoming %}
+        <li class="list-group-item"><a href="{{ s.get_absolute_url }}">{{ s.session_date|date:"D, M j" }}{% if s.start_time %} · {{ s.start_time|time:"g:i A" }}{% endif %}</a> <span class="text-body-secondary small">{{ s.get_session_type_display }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-calendar-week"></i> Next 7 days</span>
+        <a class="small" href="{% url 'scheduling:calendar' %}">Calendar</a>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for e in upcoming_events %}
+        <li class="list-group-item"><a href="{{ e.get_absolute_url }}">{{ e.title }}</a><div class="small text-body-secondary">{{ e.start|localdt|date:"D, M j · g:i A" }}{% if e.location %} · {{ e.location }}{% endif %}</div></li>
+        {% empty %}
+        <li class="list-group-item text-body-secondary">No events.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% if my_reports %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">Concerns I've reported</div>
+      <ul class="list-group list-group-flush">
+        {% for c in my_reports %}
+        <li class="list-group-item d-flex justify-content-between"><a href="{{ c.get_absolute_url }}">{{ c.case_number }}</a><span class="small text-body-secondary">{{ c.get_status_display }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

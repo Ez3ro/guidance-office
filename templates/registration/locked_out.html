@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Account locked{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-md-5">
+  <div class="col-md-8 col-lg-6">
+    <div class="alert alert-danger">
+      <h1 class="h5">Too many failed sign-in attempts</h1>
+      <p class="mb-0">This account is locked for 30 minutes on this connection. If you've forgotten your password, ask the system administrator to reset it.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

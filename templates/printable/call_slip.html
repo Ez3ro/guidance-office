@@ -1,0 +1,25 @@
+{% extends "printable/base.html" %}
+{% block title %}Call slip{% endblock %}
+{% block pages %}
+{% for student in students %}
+<div class="sheet half-sheet">
+  {% include "printable/_header.html" %}
+  <h1 class="form-title">Call Slip</h1>
+  <p class="form-subtitle">DO 006, s. 2026 – Annex K · Ref. {{ reference }}</p>
+  <p>Date: <span class="fill">{{ printed_at|date:"F j, Y" }}</span></p>
+  <p>To the parent / guardian of <span class="fill wide">{{ student.full_name }}</span>,
+     {% with section=student.current_section %}<span class="fill">{% if section %}{{ section.short_label }}{% else %}&nbsp;{% endif %}</span>{% endwith %}</p>
+  <p>You are respectfully requested to come to the school's Guidance Office on
+     <span class="fill">{{ meet_date|default:"&nbsp;" }}</span> at <span class="fill">{{ meet_time|default:"&nbsp;" }}</span>
+     to talk about a matter concerning your child. If you can't come at that time, please call the school to agree another schedule.</p>
+  <p>Thank you for working with us for your child's welfare.</p>
+  <div class="signatures">
+    <div><div class="sig-line"></div>{{ school.guidance_head_name|default:"Guidance Counselor" }}</div>
+    <div><div class="sig-line"></div>Parent / guardian's signature and date received</div>
+  </div>
+  <footer class="sheet-footer">{{ school.contact_number }}{% if school.email %} · {{ school.email }}{% endif %}</footer>
+</div>
+{% empty %}
+<div class="sheet"><p>No learner on this record to address a call slip to.</p></div>
+{% endfor %}
+{% endblock %}

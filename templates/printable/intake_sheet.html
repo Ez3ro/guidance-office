@@ -1,0 +1,52 @@
+{% extends "printable/base.html" %}
+{% block title %}Intake sheet {{ case.case_number }}{% endblock %}
+{% block body %}
+<h1 class="form-title">Incident Report and Intake Sheet</h1>
+<p class="form-subtitle">DepEd Child Protection Policy (DO 40, s. 2012) · Guidelines on Ensuring a Safe and Motivating Learning Environment (DO 006, s. 2026)</p>
+
+<table class="form-grid">
+  <tr><th>Case no.</th><td>{{ case.case_number }}</td><th>Date/time received</th><td>{{ case.reported_at|localdt|date:"M j, Y g:i A" }}</td></tr>
+  <tr><th>Received by</th><td>{{ case.received_by|default:"" }}</td><th>How reported</th><td>{{ case.get_report_channel_display }}</td></tr>
+  <tr><th>Informant / complainant</th><td>{{ case.informant_name }}</td><th>Relationship to learner</th><td>{{ case.informant_relationship }}</td></tr>
+  <tr><th>Date/time of incident</th><td>{{ case.incident_date|date:"M j, Y" }}{% if case.incident_time %} {{ case.incident_time|time:"g:i A" }}{% endif %}</td><th>Place</th><td>{{ case.get_incident_location_display }}{% if case.location_details %} – {{ case.location_details }}{% endif %}</td></tr>
+  <tr><th>Nature of concern</th><td colspan="3">{% for ct in case.concern_types.all %}{{ ct.name }}{% if not forloop.last %}; {% endif %}{% endfor %}</td></tr>
+  <tr><th>Case type</th><td colspan="3">{{ case.get_flow_display|default:"" }}</td></tr>
+</table>
+
+<h2 class="form-section">Persons involved</h2>
+<table class="form-grid">
+  <thead><tr><th>Role</th><th>Name</th><th>Type</th><th>Sex</th><th>Age</th><th>Grade / position</th><th>Relationship</th></tr></thead>
+  <tbody>
+    {% for p in parties %}
+    <tr><td>{{ p.get_role_display }}</td><td>{{ p.display_name }}</td><td>{{ p.get_person_type_display }}</td><td>{{ p.party_sex }}</td><td>{% if p.student %}{{ p.student.age|default:"" }}{% else %}{{ p.age|default:"" }}{% endif %}</td><td>{{ p.party_grade }}</td><td>{{ p.relationship_to_victim }}</td></tr>
+    {% empty %}
+    <tr><td colspan="7" class="blank-row">&nbsp;</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2 class="form-section">Account of the incident</h2>
+<div class="text-box">{{ case.narrative|linebreaksbr }}</div>
+
+<h2 class="form-section">Initial interventions</h2>
+<div class="text-box">{{ case.initial_actions|linebreaksbr|default:"&nbsp;" }}</div>
+
+{% if assessment %}
+<h2 class="form-section">Initial risk assessment (summary)</h2>
+<table class="form-grid">
+  <tr><th>Assessed</th><td>{{ assessment.assessed_at|localdt|date:"M j, Y g:i A" }} by {{ assessment.assessed_by|default:"" }}</td><th>Overall risk</th><td>{{ assessment.overall_level|capfirst }}</td></tr>
+  <tr><th>Actions needed</th><td colspan="3">{{ assessment.actions_needed|linebreaksbr }}</td></tr>
+</table>
+{% endif %}
+
+<h2 class="form-section">Referral to the disciplining authority</h2>
+<table class="form-grid">
+  <tr><th>Referred to</th><td>{{ case.disciplining_authority }}</td><th>Date/time referred</th><td>{{ case.intake_referred_at|localdt|date:"M j, Y g:i A" }}</td></tr>
+  <tr><th>Deadline (48 hours)</th><td colspan="3">{{ case.intake_due_at|localdt|date:"M j, Y g:i A" }}</td></tr>
+</table>
+
+<div class="signatures">
+  <div><div class="sig-line"></div>Prepared by (RGC / designated CPC personnel)</div>
+  <div><div class="sig-line"></div>Received by (disciplining authority)</div>
+</div>
+{% endblock %}

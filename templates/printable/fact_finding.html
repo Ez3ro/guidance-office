@@ -1,0 +1,33 @@
+{% extends "printable/base.html" %}
+{% block title %}Fact-finding report {{ case.case_number }}{% endblock %}
+{% block body %}
+<h1 class="form-title">Fact-Finding Investigation Report</h1>
+<p class="form-subtitle">DO 006, s. 2026 – findings to the School Head within 10 calendar days</p>
+<table class="form-grid">
+  <tr><th>To</th><td colspan="3">{{ school.school_head_name|default:"The School Head" }}{% if school.school_head_position %}, {{ school.school_head_position }}{% endif %}</td></tr>
+  <tr><th>Case no.</th><td>{{ case.case_number }}</td><th>Report received</th><td>{{ case.reported_at|localdt|date:"M j, Y" }}</td></tr>
+  <tr><th>Fact-finding started</th><td>{{ case.fact_finding_started_on|date:"M j, Y" }}</td><th>Due to School Head</th><td>{{ case.fact_finding_due|date:"M j, Y" }}</td></tr>
+  <tr><th>Nature of concern</th><td colspan="3">{% for ct in case.concern_types.all %}{{ ct.name }}{% if not forloop.last %}; {% endif %}{% endfor %}</td></tr>
+</table>
+
+<h2 class="form-section">Persons involved</h2>
+<table class="form-grid">
+  <thead><tr><th>Role</th><th>Name</th><th>Type</th><th>Grade / position</th></tr></thead>
+  <tbody>
+    {% for p in parties %}<tr><td>{{ p.get_role_display }}</td><td>{{ p.display_name }}</td><td>{{ p.get_person_type_display }}</td><td>{{ p.party_grade }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2 class="form-section">Findings</h2>
+<div class="text-box tall">{{ case.findings|linebreaksbr|default:"&nbsp;" }}</div>
+
+<table class="form-grid">
+  <tr><th>Conclusion</th><td>{{ case.get_substantiated_display }}</td></tr>
+  <tr><th>Recommendations / outcome</th><td>{{ case.outcome_summary|linebreaksbr }}</td></tr>
+</table>
+
+<div class="signatures">
+  <div><div class="sig-line"></div>Investigating officer / CPC</div>
+  <div><div class="sig-line"></div>Received by (School Head) – date</div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["sin1"],
+  "ignoreCommand": "[ \"$VERCEL_ENV\" != \"production\" ]",
+  "functions": {
+    "config/wsgi.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{.github/**,docs/**,supabase/**,media/**,**/tests.py,**/tests/**}"
+    }
+  },
+  "crons": [
+    { "path": "/internal/cron/daily/", "schedule": "0 23 * * *" }
+  ]
+}

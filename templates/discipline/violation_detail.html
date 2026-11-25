@@ -1,0 +1,16 @@
+{% extends "crud/detail.html" %}
+{% block heading %}
+<h1 class="h3 mb-1">{{ object.offense_type.name }}</h1>
+<div class="text-body-secondary">
+  <a href="{{ object.student.get_absolute_url }}">{{ object.student.full_name }}</a> · {{ object.incident_date|date:"M j, Y" }}
+  · {% badge object.offense_type.level object.offense_type.get_level_display %} {% badge object.status object.get_status_display %}
+</div>
+{% endblock %}
+{% block before_sections %}
+{% if object.offense_type.default_response %}
+<div class="alert alert-light border small"><strong>School response for this offence:</strong> {{ object.offense_type.default_response }}</div>
+{% endif %}
+{% endblock %}
+{% block after_sections %}
+{% include "includes/attachments.html" %}
+{% endblock %}

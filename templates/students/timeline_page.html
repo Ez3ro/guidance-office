@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Timeline – {{ student.full_name }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3"><a href="{{ student.get_absolute_url }}">{{ student.full_name }}</a> · timeline</h1>
+{% include "students/student_detail.html#timeline" %}
+{% endblock %}

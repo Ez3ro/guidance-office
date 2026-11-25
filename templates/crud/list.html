@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <h1 class="h3 mb-0">{{ title }}</h1>
+  <div class="d-flex flex-wrap gap-2">
+    {% block header_actions %}
+    {% for action in header_actions %}
+    <a class="btn btn-{{ action.style }}" href="{{ action.url }}">{% if action.icon %}<i class="bi {{ action.icon }}"></i> {% endif %}{{ action.label }}</a>
+    {% endfor %}
+    {% endblock %}
+    {% if create_url %}<a class="btn btn-primary" href="{{ create_url }}"><i class="bi bi-plus-lg"></i> {{ create_label }}</a>{% endif %}
+  </div>
+</div>
+
+{% if search_enabled or filters %}
+<form class="row g-2 mb-3 list-filters" method="get" action="{{ request.path }}">
+  {% if search_enabled %}
+  <div class="col-md-4">
+    <label class="visually-hidden" for="list-search">Search</label>
+    <input id="list-search" type="search" name="q" value="{{ request.GET.q }}" class="form-control"
+           placeholder="{{ search_placeholder }}" autocomplete="off"
+           hx-get="{{ request.path }}" hx-trigger="input changed delay:300ms, search"
+           hx-target="#results" hx-include="closest form" hx-push-url="true">
+  </div>
+  {% endif %}
+  {% for f in filters %}
+  <div class="col-md-auto">
+    <label class="visually-hidden" for="filter-{{ f.param }}">{{ f.label }}</label>
+    <select id="filter-{{ f.param }}" name="{{ f.param }}" class="form-select"
+            hx-get="{{ request.path }}" hx-trigger="change" hx-target="#results"
+            hx-include="closest form" hx-push-url="true">
+      <option value="">{{ f.label }}: all</option>
+      {% for value, label in f.choices %}
+      <option value="{{ value }}"{% if f.current == value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endfor %}
+  {% block extra_filters %}{% endblock %}
+  <div class="col-md-auto"><noscript><button type="submit" class="btn btn-outline-secondary">Apply</button></noscript></div>
+</form>
+{% endif %}
+
+<div id="results">
+{% partialdef results inline %}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>{% for label, accessor in columns %}<th scope="col">{{ label }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for obj in object_list %}
+          {% include row_template|default:"includes/row.html" %}
+          {% empty %}
+          <tr><td colspan="{{ columns|length }}" class="text-center text-body-secondary py-4">{{ empty_message }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% include "includes/pagination.html" %}
+{% endpartialdef %}
+</div>
+{% endblock %}

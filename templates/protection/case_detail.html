@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}{{ object.case_number }}{% endblock %}
+{% block content %}
+{% with c=object %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ c.case_number }}</h1>
+    <div class="text-body-secondary">
+      {% badge c.status c.get_status_display %}
+      {% if c.restricted %}<span class="badge text-bg-dark"><i class="bi bi-lock-fill"></i> Restricted</span>{% endif %}
+      · Reported {{ c.reported_at|localdt|date:"M j, Y g:i A" }}
+      {% if c.flow %}· {{ c.get_flow_display }}{% endif %}
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    {% for a in actions %}<a class="btn btn-sm btn-{{ a.style }}" href="{{ a.url }}">{% if a.icon %}<i class="bi {{ a.icon }}"></i> {% endif %}{{ a.label }}</a>{% endfor %}
+  </div>
+</div>
+
+<div class="alert alert-warning small"><i class="bi bi-shield-lock"></i> Child protection record (DO 40, s. 2012; DO 006, s. 2026). Keep the identities of everyone involved confidential. Viewing and printing are logged.</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">Report</div>
+      <div class="card-body">
+        <dl class="row mb-0 detail-list">
+          <dt class="col-sm-4">Concern(s)</dt><dd class="col-sm-8">{{ c.concern_types|cell }}</dd>
+          <dt class="col-sm-4">Received by</dt><dd class="col-sm-8">{{ c.received_by|cell }} via {{ c.get_report_channel_display|lower }}</dd>
+          <dt class="col-sm-4">Informant</dt><dd class="col-sm-8">{{ c.informant_name|cell }}{% if c.informant_relationship %} ({{ c.informant_relationship }}){% endif %}{% if c.informant_contact %} · {{ c.informant_contact }}{% endif %}</dd>
+          <dt class="col-sm-4">Incident</dt><dd class="col-sm-8">{{ c.incident_date|cell }}{% if c.incident_time %} {{ c.incident_time|time:"g:i A" }}{% endif %} · {{ c.get_incident_location_display }}{% if c.location_details %} ({{ c.location_details }}){% endif %}</dd>
+          <dt class="col-sm-4">What was reported</dt><dd class="col-sm-8 text-prewrap">{{ c.narrative }}</dd>
+          <dt class="col-sm-4">Initial interventions</dt><dd class="col-sm-8 text-prewrap">{{ c.initial_actions|cell }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-3" id="parties">
+      <div class="card-header fw-semibold">People involved</div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light"><tr><th>Role</th><th>Name</th><th>Type</th><th>Sex / age</th><th>Grade / position</th><th></th></tr></thead>
+          <tbody>
+            {% for p in parties %}
+            <tr>
+              <td>{{ p.get_role_display }}</td>
+              <td>{% if p.student %}<a href="{{ p.student.get_absolute_url }}">{{ p.display_name }}</a>{% else %}{{ p.display_name }}{% endif %}{% if p.relationship_to_victim %}<div class="small text-body-secondary">{{ p.relationship_to_victim }}</div>{% endif %}</td>
+              <td>{{ p.get_person_type_display }}</td>
+              <td>{{ p.party_sex|default:"—" }}{% if p.age %} / {{ p.age }}{% endif %}</td>
+              <td>{{ p.party_grade|default:"—" }}</td>
+              <td class="text-end">{% if can_edit %}<form method="post" action="{% url 'protection:remove_party' c.pk p.pk %}" data-confirm="Remove this person from the case?">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i><span class="visually-hidden">Remove</span></button></form>{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-body-secondary">No one recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if party_form %}
+      <div class="card-body border-top">
+        <details>
+          <summary class="fw-semibold">Add a person</summary>
+          <form method="post" action="{% url 'protection:add_party' c.pk %}" class="mt-3">
+            {% csrf_token %}
+            {% include "includes/form_fields.html" with form=party_form %}
+            <button type="submit" class="btn btn-sm btn-outline-primary">Add to case</button>
+          </form>
+        </details>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="card shadow-sm mb-3" id="risk">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Initial Risk Assessment (Annex H)</span>
+        {% if can_edit %}<a class="btn btn-sm btn-outline-primary" href="{% url 'protection:risk_create' c.pk %}">New assessment</a>{% endif %}
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for ra in risk_assessments %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between flex-wrap gap-2">
+            <div><strong>{{ ra.assessed_at|localdt|date:"M j, Y g:i A" }}</strong> by {{ ra.assessed_by|default:"—" }} · {% badge ra.overall_level ra.overall_level|capfirst %}</div>
+            <a class="small" href="{% url 'reports:risk_assessment_form' c.pk ra.pk %}"><i class="bi bi-printer"></i> Print</a>
+          </div>
+          <div class="small text-prewrap mt-1"><strong>Actions:</strong> {{ ra.actions_needed }}</div>
+          <div class="small text-body-secondary">Responsible: {{ ra.responsible_persons }} · Timeline: {{ ra.timeline }}</div>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-danger">Not yet assessed. This is the first step after a report.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">Fact-finding and outcome</div>
+      <div class="card-body">
+        <dl class="row mb-0 detail-list">
+          <dt class="col-sm-4">Substantiated</dt><dd class="col-sm-8">{{ c.get_substantiated_display }}</dd>
+          <dt class="col-sm-4">Disciplining authority</dt><dd class="col-sm-8">{{ c.disciplining_authority|cell }}</dd>
+          <dt class="col-sm-4">Findings</dt><dd class="col-sm-8 text-prewrap">{{ c.findings|cell }}</dd>
+          <dt class="col-sm-4">Outcome and monitoring</dt><dd class="col-sm-8 text-prewrap">{{ c.outcome_summary|cell }}</dd>
+          {% if c.closed_on %}<dt class="col-sm-4">Closed</dt><dd class="col-sm-8">{{ c.closed_on|date:"M j, Y" }}</dd>{% endif %}
+        </dl>
+      </div>
+    </div>
+    {% include "includes/attachments.html" %}
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold"><i class="bi bi-alarm"></i> DO 006 timelines</div>
+      <ul class="list-group list-group-flush">
+        {% for d in deadlines %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <span class="fw-semibold">{{ d.label }}</span>
+            {% if d.applicable %}{% badge d.state d.state_label %}{% else %}<span class="badge text-bg-light">After fact-finding starts</span>{% endif %}
+          </div>
+          <div class="small text-body-secondary">{{ d.basis }}{% if d.due %} · due {{ d.due|localdt|date:"M j, Y g:i A" }}{% endif %}{% if d.done_at %} · done {{ d.done_at|localdt|date:"M j, Y" }}{% endif %}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card shadow-sm mb-3" id="referrals">
+      <div class="card-header fw-semibold">Referrals</div>
+      <ul class="list-group list-group-flush">
+        {% for r in referrals %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between gap-2"><strong>{{ r.agency.name }}</strong>{% if can_edit %}<a class="small" href="{% url 'protection:referral_update' c.pk r.pk %}">Update</a>{% endif %}</div>
+          <div class="small text-body-secondary">{{ r.referred_on|date:"M j, Y" }} · {{ r.get_status_display }}</div>
+          {% if r.feedback %}<div class="small text-prewrap">{{ r.feedback }}</div>{% endif %}
+        </li>
+        {% empty %}
+        <li class="list-group-item text-body-secondary">No referrals.</li>
+        {% endfor %}
+      </ul>
+      {% if referral_form %}
+      <div class="card-body border-top">
+        <details>
+          <summary class="fw-semibold">Record a referral</summary>
+          <form method="post" action="{% url 'protection:add_referral' c.pk %}" class="mt-3">
+            {% csrf_token %}
+            {% include "includes/form_fields.html" with form=referral_form %}
+            <button type="submit" class="btn btn-sm btn-outline-primary">Save referral</button>
+          </form>
+        </details>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">Linked records</div>
+      <ul class="list-group list-group-flush">
+        {% for d in linked_cases %}<li class="list-group-item"><i class="bi bi-hammer"></i> <a href="{{ d.get_absolute_url }}">{{ d }}</a></li>{% endfor %}
+        {% for s in linked_sessions %}<li class="list-group-item"><i class="bi bi-chat-heart"></i> <a href="{{ s.get_absolute_url }}">{{ s }}</a></li>{% endfor %}
+        {% for i in linked_interventions %}<li class="list-group-item"><i class="bi bi-life-preserver"></i> <a href="{{ i.get_absolute_url }}">{{ i.title }}</a></li>{% endfor %}
+        {% if not linked_cases and not linked_sessions and not linked_interventions %}<li class="list-group-item text-body-secondary">None yet.</li>{% endif %}
+      </ul>
+      {% if can_edit %}
+      <div class="card-body border-top d-flex flex-wrap gap-2">
+        {% if caps.manage_discipline %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'discipline:case_create' %}?protection_case={{ c.pk }}">Open disciplinary case</a>{% endif %}
+        {% if caps.manage_interventions %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'interventions:create' %}?protection_case={{ c.pk }}">Plan intervention</a>{% endif %}
+        {% if caps.counseling %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'counseling:create' %}?protection_case={{ c.pk }}">Record session</a>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}

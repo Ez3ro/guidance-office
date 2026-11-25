@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ object }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>{% block heading %}<h1 class="h3 mb-0">{{ object }}</h1>{% endblock %}</div>
+  <div class="d-flex flex-wrap gap-2">
+    {% for a in actions %}
+    <a class="btn btn-sm btn-{{ a.style }}" href="{{ a.url }}">{% if a.icon %}<i class="bi {{ a.icon }}"></i> {% endif %}{{ a.label }}</a>
+    {% endfor %}
+  </div>
+</div>
+{% block before_sections %}{% endblock %}
+{% for section_title, rows in sections %}
+<div class="card shadow-sm mb-3">
+  <div class="card-header fw-semibold">{{ section_title }}</div>
+  <div class="card-body">
+    <dl class="row mb-0 detail-list">
+      {% for label, value in rows %}
+      <dt class="col-sm-4">{{ label }}</dt>
+      <dd class="col-sm-8 text-prewrap">{{ value|cell }}</dd>
+      {% endfor %}
+    </dl>
+  </div>
+</div>
+{% endfor %}
+{% block after_sections %}{% endblock %}
+{% endblock %}
