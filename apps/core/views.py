@@ -40,54 +40,92 @@ def dashboard(request):
     from apps.interventions.models import InterventionPlan
     from apps.protection.models import ProtectionCase
     from apps.scheduling.models import CalendarEvent, FollowUp
-    from apps.students.models import Student
+    from apps.students.models import SchoolYear, Student
 
     user = request.user
     now = timezone.now()
     today = timezone.localdate()
     month_start = today.replace(day=1)
+    hour = timezone.localtime(now).hour
 
     my_followups = FollowUp.objects.open().filter(assigned_to=user).order_by("due_at")
+    visible_followups = FollowUp.objects.visible_to(user)
+    events = CalendarEvent.objects.visible_to(user)
     ctx = {
-        "my_followups": my_followups[:8],
+        "greeting": "Good morning"
+        if hour < 12
+        else "Good afternoon"
+        if hour < 18
+        else "Good evening",
+        "school_year": SchoolYear.current(),
+        "my_followups": my_followups[:6],
         "overdue_count": my_followups.filter(due_at__lt=now).count(),
         "open_followup_count": my_followups.count(),
-        "upcoming_events": CalendarEvent.objects.visible_to(user)
-        .filter(start__date__gte=today, start__date__lte=today + timedelta(days=7))
-        .order_by("start")[:6],
+        "upcoming_events": events.filter(
+            start__date__gt=today, start__date__lte=today + timedelta(days=7)
+        ).order_by("start")[:6],
+        "events_today": events.filter(start__date=today).order_by("start"),
+        "overdue_items": visible_followups.overdue().order_by("due_at")[:8],
+        "overdue_total": visible_followups.overdue().count(),
+        "students_active": Student.objects.visible_to(user)
+        .filter(status=Student.Status.ACTIVE)
+        .distinct()
+        .count(),
     }
     if user.has_cap(Cap.VIEW_LRP):
         visible_cases = ProtectionCase.objects.visible_to(user)
         ctx["lrp_open"] = visible_cases.open().count()
         ctx["lrp_new"] = visible_cases.filter(status=ProtectionCase.Status.REPORTED).count()
         ctx["lrp_deadlines"] = (
-            FollowUp.objects.open()
-            .visible_to(user)
-            .filter(module=FollowUp.Module.LRP, due_at__lte=now + timedelta(days=2))
+            visible_followups.open()
+            .filter(
+                module=FollowUp.Module.LRP,
+                due_at__gte=now,
+                due_at__lte=now + timedelta(days=2),
+            )
             .order_by("due_at")[:6]
         )
     if user.has_cap(Cap.VIEW_DISCIPLINE):
-        ctx["violations_month"] = ViolationRecord.objects.filter(
-            incident_date__gte=month_start
-        ).count()
-        ctx["discipline_open"] = DisciplinaryCase.objects.open().count()
+        violations = ViolationRecord.objects.visible_to(user)
+        ctx["violations_total"] = violations.count()
+        ctx["violations_month"] = violations.filter(incident_date__gte=month_start).count()
+        cases = DisciplinaryCase.objects.visible_to(user)
+        S = DisciplinaryCase.Status
+        pending = cases.filter(status__in=[S.FILED, S.NOTICE_SERVED]).count()
+        ongoing = cases.filter(status__in=[S.DELIBERATION, S.DECIDED, S.APPEALED]).count()
+        closed = cases.filter(status__in=[S.CLOSED, S.DISMISSED]).count()
+        total = pending + ongoing + closed
+        ctx["cases"] = {
+            "pending": pending,
+            "ongoing": ongoing,
+            "closed": closed,
+            "total": total,
+            # Percentages for the pipeline bar (widths are applied by app.js: strict CSP).
+            "pending_pct": round(pending * 100 / total) if total else 0,
+            "ongoing_pct": round(ongoing * 100 / total) if total else 0,
+            "closed_pct": round(closed * 100 / total) if total else 0,
+        }
     if user.has_cap(Cap.COUNSELING):
-        mine = CounselingSession.objects.filter(counselor=user)
+        sessions = CounselingSession.objects.visible_to(user)
+        scheduled = sessions.filter(status=CounselingSession.Status.SCHEDULED)
+        ctx["awaiting_counseling"] = scheduled.filter(session_date__gte=today).count()
+        ctx["sessions_today"] = scheduled.filter(session_date=today).order_by("start_time")
+        mine = sessions.filter(counselor=user)
         ctx["sessions_month"] = mine.filter(
             session_date__gte=month_start, status=CounselingSession.Status.COMPLETED
         ).count()
-        ctx["sessions_upcoming"] = mine.filter(
-            session_date__gte=today, status=CounselingSession.Status.SCHEDULED
-        ).order_by("session_date", "start_time")[:6]
     if user.has_cap(Cap.VIEW_INTERVENTIONS):
-        ctx["interventions_ongoing"] = InterventionPlan.objects.filter(
-            status=InterventionPlan.Status.ONGOING
-        ).count()
+        plans = InterventionPlan.objects.visible_to(user)
+        ctx["awaiting_intervention"] = plans.filter(status=InterventionPlan.Status.PLANNED).count()
+        ctx["under_monitoring"] = plans.filter(status=InterventionPlan.Status.ONGOING).count()
     if user.role == Role.TEACHER:
         ctx["advisees_count"] = Student.objects.visible_to(user).count()
         ctx["my_reports"] = ProtectionCase.objects.filter(created_by=user).order_by("-reported_at")[
             :5
         ]
+    # "Needs attention" = overdue follow-ups plus DO 006 deadlines falling due within 48 hours.
+    ctx["attention_count"] = ctx["overdue_total"] + len(ctx.get("lrp_deadlines", []))
+    ctx["today_count"] = len(ctx["events_today"]) + len(ctx.get("sessions_today", []))
     if user.has_cap(Cap.VIEW_AUDIT):
         ctx["recent_failed_logins"] = AuditEvent.objects.filter(
             action=AuditEvent.Action.LOGIN_FAILED, timestamp__gte=now - timedelta(days=1)

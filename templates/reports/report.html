@@ -42,7 +42,7 @@
     {% if table.note %}<p class="small text-body-secondary mb-1">{{ table.note }}</p>{% endif %}
     <div class="table-responsive">
       <table class="table table-sm table-bordered align-middle">
-        <thead class="table-light"><tr>{% for h in table.headers %}<th scope="col">{{ h }}</th>{% endfor %}</tr></thead>
+        <thead class="app-thead"><tr>{% for h in table.headers %}<th scope="col">{{ h }}</th>{% endfor %}</tr></thead>
         <tbody>
           {% for row in table.rows %}
           <tr{% if row.0|stringformat:"s"|slice:":5" == "Total" %} class="fw-semibold"{% endif %}>{% for value in row %}<td>{{ value }}</td>{% endfor %}</tr>

@@ -21,6 +21,7 @@ from .models import DisciplinaryCase, OffenseLevel, ViolationRecord
 class ViolationListView(GenericListView):
     model = ViolationRecord
     title = "Violation records"
+    subtitle = "Rule violations and incident reports, by offence level and status."
     required_caps = (Cap.VIEW_DISCIPLINE, Cap.REPORT_INCIDENT)
     columns = [
         ("Date", "incident_date"),
@@ -43,8 +44,16 @@ class ViolationListView(GenericListView):
 
     def get_filters(self):
         return [
-            ListFilter("level", "Level", OffenseLevel.choices, lookup="offense_type__level"),
-            ListFilter("status", "Status", ViolationRecord.Status.choices),
+            ListFilter(
+                "level",
+                "Level",
+                OffenseLevel.choices,
+                lookup="offense_type__level",
+                all_label="All offence levels",
+            ),
+            ListFilter(
+                "status", "Status", ViolationRecord.Status.choices, all_label="All statuses"
+            ),
         ]
 
     def get_queryset(self):
@@ -162,6 +171,7 @@ class CaseListView(GenericListView):
     model = DisciplinaryCase
     required_caps = (Cap.VIEW_DISCIPLINE,)
     title = "Disciplinary cases"
+    subtitle = "Due-process cases under DO 006, s. 2026, from filing to decision and appeal."
     columns = [
         ("Case no.", "case_number"),
         ("Title", "title"),
@@ -176,7 +186,11 @@ class CaseListView(GenericListView):
     create_caps = (Cap.MANAGE_DISCIPLINE,)
 
     def get_filters(self):
-        return [ListFilter("status", "Status", DisciplinaryCase.Status.choices)]
+        return [
+            ListFilter(
+                "status", "Status", DisciplinaryCase.Status.choices, all_label="All case statuses"
+            )
+        ]
 
     def get_queryset(self):
         return super().get_queryset().select_related("handled_by").prefetch_related("respondents")

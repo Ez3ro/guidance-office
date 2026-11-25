@@ -25,6 +25,7 @@ class ListFilter:
     choices: list[tuple[Any, str]]
     lookup: str | None = None
     current: str = ""
+    all_label: str = ""  # text of the "no filter" option, e.g. "All grade levels"
 
 
 @dataclass
@@ -87,6 +88,7 @@ class GenericListView(CapabilityRequiredMixin, ScopedQuerysetMixin, ListView):
     template_name = "crud/list.html"
     paginate_by = 25
     title = ""
+    subtitle = ""
     columns: list[tuple[str, str]] = []
     search_fields: list[str] = []
     search_placeholder = "Search…"
@@ -141,6 +143,7 @@ class GenericListView(CapabilityRequiredMixin, ScopedQuerysetMixin, ListView):
             flt.current = self.request.GET.get(flt.param, "")
         ctx.update(
             title=self.title,
+            subtitle=self.subtitle,
             columns=self.columns,
             filters=filters,
             search_enabled=bool(self.search_fields),

@@ -1,0 +1,74 @@
+{% with ns=request.resolver_match.namespace un=request.resolver_match.url_name %}
+<aside class="app-sidebar d-print-none">
+  <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="appSidebar" aria-labelledby="appSidebarLabel">
+    <div class="offcanvas-header">
+      <span class="visually-hidden" id="appSidebarLabel">Main menu</span>
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" data-bs-target="#appSidebar" aria-label="Close menu"></button>
+    </div>
+    <div class="offcanvas-body">
+      <a class="sidebar-brand" href="{% url 'core:dashboard' %}">
+        <span class="brand-mark"><i class="bi bi-compass"></i></span>
+        <span class="brand-copy">
+          <span class="brand-name">{{ SITE_NAME }}</span>
+          <span class="brand-sub">Guidance &amp; case management</span>
+        </span>
+      </a>
+
+      <nav class="sidebar-nav" aria-label="Main">
+        <div class="nav-section">Overview</div>
+        <a class="side-link{% if ns == 'core' and un == 'dashboard' %} active{% endif %}" href="{% url 'core:dashboard' %}"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
+        <a class="side-link{% if ns == 'scheduling' and un != 'followups' and un != 'followup_create' and un != 'followup_update' %} active{% endif %}" href="{% url 'scheduling:calendar' %}"><i class="bi bi-calendar3"></i><span>Guidance calendar</span></a>
+        <a class="side-link{% if ns == 'scheduling' and un == 'followups' or un == 'followup_create' or un == 'followup_update' %} active{% endif %}" href="{% url 'scheduling:followups' %}"><i class="bi bi-list-check"></i><span>Follow-ups</span></a>
+
+        <div class="nav-section">Learners</div>
+        <a class="side-link{% if ns == 'students' and un != 'sections' %} active{% endif %}" href="{% url 'students:list' %}"><i class="bi bi-people"></i><span>Student profiles</span></a>
+
+        <div class="nav-section">Cases</div>
+        {% if caps.view_lrp %}
+        <a class="side-link{% if ns == 'protection' and un != 'report' and un != 'my_reports' %} active{% endif %}" href="{% url 'protection:list' %}"><i class="bi bi-shield-check"></i><span>Child protection</span><span class="side-tag">DO 40</span></a>
+        {% endif %}
+        <a class="side-link{% if ns == 'protection' and un == 'report' %} active{% endif %}" href="{% url 'protection:report' %}"><i class="bi bi-megaphone"></i><span>Report a concern</span></a>
+        {% if caps.view_discipline or caps.report_incident %}
+        <a class="side-link{% if ns == 'discipline' and 'violation' in un %} active{% endif %}" href="{% url 'discipline:violations' %}"><i class="bi bi-exclamation-octagon"></i><span>Violation records</span></a>
+        {% endif %}
+        {% if caps.view_discipline %}
+        <a class="side-link{% if ns == 'discipline' and 'violation' not in un %} active{% endif %}" href="{% url 'discipline:cases' %}"><i class="bi bi-folder2-open"></i><span>Disciplinary cases</span></a>
+        {% endif %}
+        {% if caps.view_interventions %}
+        <a class="side-link{% if ns == 'interventions' %} active{% endif %}" href="{% url 'interventions:list' %}"><i class="bi bi-stars"></i><span>Interventions</span></a>
+        {% endif %}
+        {% if caps.counseling %}
+        <a class="side-link{% if ns == 'counseling' %} active{% endif %}" href="{% url 'counseling:list' %}"><i class="bi bi-chat-heart"></i><span>Counseling</span></a>
+        {% endif %}
+        {% if caps.view_reports or caps.view_lrp or caps.view_discipline %}
+        <a class="side-link{% if ns == 'reports' %} active{% endif %}" href="{% url 'reports:index' %}"><i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span></a>
+        {% endif %}
+
+        {% if caps.manage_users or caps.view_audit or caps.manage_settings %}
+        <div class="nav-section">Administration</div>
+        {% if caps.manage_users %}
+        <a class="side-link{% if ns == 'accounts' and 'user' in un %} active{% endif %}" href="{% url 'accounts:user_list' %}"><i class="bi bi-person-gear"></i><span>User management</span><span class="side-tag side-tag-admin">Admin</span></a>
+        {% endif %}
+        {% if caps.view_audit %}
+        <a class="side-link{% if ns == 'audit' %} active{% endif %}" href="{% url 'audit:list' %}"><i class="bi bi-journal-check"></i><span>Audit log</span></a>
+        {% endif %}
+        {% if caps.manage_settings %}
+        <a class="side-link{% if ns == 'core' and un == 'school_profile' %} active{% endif %}" href="{% url 'core:school_profile' %}"><i class="bi bi-building-gear"></i><span>School profile</span></a>
+        <a class="side-link{% if ns == 'students' and un == 'sections' %} active{% endif %}" href="{% url 'students:sections' %}"><i class="bi bi-diagram-3"></i><span>Sections</span></a>
+        <a class="side-link" href="{% url 'admin:index' %}"><i class="bi bi-sliders"></i><span>Reference data</span><i class="bi bi-box-arrow-up-right side-ext"></i></a>
+        {% endif %}
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-foot">
+        <a class="side-link{% if ns == 'protection' and un == 'my_reports' %} active{% endif %}" href="{% url 'protection:my_reports' %}"><i class="bi bi-inbox"></i><span>Concerns I've reported</span></a>
+        <a class="side-link{% if ns == 'accounts' and 'password' in un %} active{% endif %}" href="{% url 'accounts:password_change' %}"><i class="bi bi-person-circle"></i><span>My account</span></a>
+        <form method="post" action="{% url 'accounts:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="side-link side-link-btn"><i class="bi bi-box-arrow-left"></i><span>Sign out</span></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</aside>
+{% endwith %}

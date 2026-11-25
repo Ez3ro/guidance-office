@@ -18,6 +18,7 @@ class SessionListView(GenericListView):
     model = CounselingSession
     required_caps = (Cap.COUNSELING,)
     title = "Counseling sessions"
+    subtitle = "Confidential sessions, action plans and crisis interventions."
     columns = [
         ("Date", "session_date"),
         ("Learner(s)", "students"),
@@ -34,10 +35,28 @@ class SessionListView(GenericListView):
 
     def get_filters(self):
         return [
-            ListFilter("mine", "Counselor", [("1", "My sessions")], lookup="counselor"),
-            ListFilter("status", "Status", CounselingSession.Status.choices),
-            ListFilter("primary_concern", "Concern", CounselingSession.Concern.choices),
-            ListFilter("session_type", "Type", CounselingSession.SessionType.choices),
+            ListFilter(
+                "mine",
+                "Counselor",
+                [("1", "My sessions")],
+                lookup="counselor",
+                all_label="All counselors",
+            ),
+            ListFilter(
+                "status", "Status", CounselingSession.Status.choices, all_label="All statuses"
+            ),
+            ListFilter(
+                "primary_concern",
+                "Concern",
+                CounselingSession.Concern.choices,
+                all_label="All concerns",
+            ),
+            ListFilter(
+                "session_type",
+                "Type",
+                CounselingSession.SessionType.choices,
+                all_label="All session formats",
+            ),
         ]
 
     def apply_filter(self, qs, flt, value):

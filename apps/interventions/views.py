@@ -22,6 +22,7 @@ from .models import InterventionPlan, InterventionType
 class PlanListView(GenericListView):
     model = InterventionPlan
     title = "Interventions"
+    subtitle = "Intervention plans, parent conferences, behaviour contracts and outcomes."
     columns = [
         ("Title", "title"),
         ("Learner", "student.full_name"),
@@ -38,7 +39,9 @@ class PlanListView(GenericListView):
 
     def get_filters(self):
         return [
-            ListFilter("status", "Status", InterventionPlan.Status.choices),
+            ListFilter(
+                "status", "Status", InterventionPlan.Status.choices, all_label="All statuses"
+            ),
             ListFilter(
                 "type",
                 "Type",

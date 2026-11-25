@@ -20,7 +20,8 @@ from .timeline import KINDS, build_timeline, visible_kinds
 
 class StudentListView(GenericListView):
     model = Student
-    title = "Learners"
+    title = "Student profiles"
+    subtitle = "Learner records, parent and guardian contacts, and guidance histories."
     columns = [
         ("Name", "full_name"),
         ("LRN", "lrn"),
@@ -37,8 +38,8 @@ class StudentListView(GenericListView):
 
     def get_filters(self):
         return [
-            ListFilter("grade", "Grade (this S.Y.)", GRADE_LEVELS),
-            ListFilter("status", "Status", Student.Status.choices),
+            ListFilter("grade", "Grade (this S.Y.)", GRADE_LEVELS, all_label="All grade levels"),
+            ListFilter("status", "Status", Student.Status.choices, all_label="All statuses"),
         ]
 
     def apply_filter(self, qs, flt, value):
@@ -154,6 +155,7 @@ class SectionListView(GenericListView):
     model = Section
     required_caps = (Cap.VIEW_ALL_STUDENTS,)
     title = "Sections"
+    subtitle = "Class sections and advisers for each school year."
     columns = [
         ("Section", "short_label"),
         ("School year", "school_year.name"),
@@ -163,7 +165,7 @@ class SectionListView(GenericListView):
     search_fields = ["name", "adviser__last_name", "adviser__first_name"]
 
     def get_filters(self):
-        return [ListFilter("grade_level", "Grade", GRADE_LEVELS)]
+        return [ListFilter("grade_level", "Grade", GRADE_LEVELS, all_label="All grade levels")]
 
     def get_queryset(self):
         return super().get_queryset().select_related("school_year", "adviser")

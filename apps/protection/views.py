@@ -28,7 +28,11 @@ from .models import CaseParty, ConcernCategory, ProtectionCase, Referral
 class CaseListView(GenericListView):
     model = ProtectionCase
     required_caps = (Cap.VIEW_LRP,)
-    title = "Learner rights and protection cases"
+    title = "Child protection cases"
+    subtitle = (
+        "Learner rights and protection (LRP): intake, risk assessment, fact-finding and "
+        "referral under DO 40, s. 2012 and DO 006, s. 2026."
+    )
     columns = [
         ("Case no.", "case_number"),
         ("Reported", "reported_at"),
@@ -45,11 +49,17 @@ class CaseListView(GenericListView):
 
     def get_filters(self):
         return [
-            ListFilter("status", "Status", ProtectionCase.Status.choices),
+            ListFilter("status", "Status", ProtectionCase.Status.choices, all_label="All statuses"),
             ListFilter(
-                "category", "Concern", ConcernCategory.choices, lookup="concern_types__category"
+                "category",
+                "Concern",
+                ConcernCategory.choices,
+                lookup="concern_types__category",
+                all_label="All concern categories",
             ),
-            ListFilter("flow", "Case type", ProtectionCase.Flow.choices),
+            ListFilter(
+                "flow", "Case type", ProtectionCase.Flow.choices, all_label="All case types"
+            ),
         ]
 
     def get_queryset(self):
@@ -196,6 +206,7 @@ class MyReportsView(GenericListView):
     model = ProtectionCase
     required_caps = (Cap.REPORT_CONCERN,)
     title = "Concerns I've reported"
+    subtitle = "Concerns you have reported and where each one stands."
     columns = [
         ("Reference", "case_number"),
         ("Sent", "reported_at"),
